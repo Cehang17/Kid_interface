@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hastanedeki Gizli Haritam - Çocuk Oryantasyon Portalı</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Fredoka & Nunito -->
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- SheetJS for Excel (.xlsx) Export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- YouTube IFrame Player API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              blue: '#4DB6AC',
+              softblue: '#E0F2F1',
+              pink: '#FF8A80',
+              softpink: '#FFEBEE',
+              yellow: '#FFD54F',
+              softyellow: '#FFFDE7',
+              purple: '#B388FF',
+              softpurple: '#EDE7F6',
+              mint: '#A7FFEB',
+              darkText: '#2C3E50'
+            }
+          },
+          fontFamily: {
+            heading: ['Fredoka', 'sans-serif'],
+            body: ['Nunito', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: radial-gradient(circle at 10% 20%, rgba(254, 243, 199, 0.6) 0%, rgba(204, 251, 241, 0.6) 50%, rgba(252, 231, 243, 0.6) 100%), #f8fafc;
+      min-height: 100vh;
+      background-attachment: fixed;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    .font-heading {
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    .card-bounce {
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .card-bounce:hover {
+      transform: translateY(-8px) scale(1.03);
+    }
+
+    .modal-backdrop {
+      background-color: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    /* Bubbly floating animation */
+    @keyframes floatBubble {
+
+      0%,
+      100% {
+        transform: translateY(0px) rotate(0deg);
+      }
+
+      50% {
+        transform: translateY(-8px) rotate(2deg);
+      }
+    }
+
+    .bubble-float {
+      animation: floatBubble 4s ease-in-out infinite;
+    }
+
+    /* Pulsing animation for stars */
+    @keyframes pulseStar {
+
+      0%,
+      100% {
+        transform: scale(1) rotate(0deg);
+      }
+
+      50% {
+        transform: scale(1.25) rotate(10deg);
+      }
+    }
+
+    .star-pulse {
+      animation: pulseStar 2s infinite ease-in-out;
+    }
+
+    /* Fun wiggle for badges */
+    @keyframes wiggleBadge {
+
+      0%,
+      100% {
+        transform: rotate(-3deg);
+      }
+
+      50% {
+        transform: rotate(3deg);
+      }
+    }
+
+    .badge-wiggle {
+      animation: wiggleBadge 2.5s ease-in-out infinite;
+    }
+  </style>
+</head>
+
+<body class="text-brand-darkText pb-14 selection:bg-amber-200">
+
+  <!-- TOP HEADER / SEVİMLİ PROFİL BAR -->
+  <header
+    class="bg-white/95 backdrop-blur-md border-b-4 border-amber-300 sticky top-0 z-30 px-3 sm:px-4 py-2.5 shadow-lg rounded-b-3xl">
+    <div class="max-w-4xl mx-auto flex items-center justify-between gap-2 sm:gap-3">
+
+      <!-- Patient / Kid Profile Info (Tıklayınca Avatar Değiştirme Açılır) -->
+      <div onclick="openAvatarChangeModal()" title="Maskotunu değiştirmek için dokun!"
+        class="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer group bg-gradient-to-r from-teal-50 via-amber-50 to-pink-50 hover:from-teal-100 hover:to-amber-100 px-3 py-1.5 rounded-2xl border-3 border-teal-200 hover:border-amber-400 transition shadow-sm transform hover:scale-102">
+        <div id="header-user-avatar"
+          class="w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-gradient-to-tr from-amber-300 via-yellow-200 to-teal-200 flex items-center justify-center border-3 border-white ring-2 ring-amber-300 text-2xl sm:text-3xl shadow-md group-hover:scale-115 group-hover:rotate-6 transition transform">
+          🦁
+        </div>
+        <div>
+          <div class="flex items-center space-x-1.5 sm:space-x-2">
+            <h2 id="header-user-name" class="text-sm sm:text-base font-heading font-black text-teal-950">Efe Yılmaz</h2>
+            <span id="header-user-room"
+              class="bg-amber-200 text-amber-900 text-[11px] font-black px-2.5 py-0.5 rounded-full border border-amber-300 shadow-2xs">
+              🚪 Oda 204
+            </span>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <p id="header-user-rank" class="text-[11px] text-teal-700 font-extrabold">🥉 Meraklı Keşifçi</p>
+            <span
+              class="text-[10px] text-amber-700 font-black opacity-0 group-hover:opacity-100 transition flex items-center gap-0.5 bg-amber-100 px-1.5 py-0.2 rounded-md">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> Değiştir
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Logo (Sağlık Personeli Çift Tıklayarak Excel İndirebilir / Yönetebilir) -->
+      <div class="flex items-center justify-center cursor-pointer group" onclick="handleLogoNurseClick()"
+        title="Çocuk Sağlığı ve Hastalıkları Anabilim Dalı (Personel: Çift Tıkla)">
+        <img src="logo.png" alt="Celal Bayar Üniversitesi Logo"
+          class="h-10 sm:h-12 w-auto object-contain drop-shadow-md group-hover:scale-110 transition-transform">
+      </div>
+
+      <!-- Star Counter & Kartım Modal Butonu -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <!-- Star Count (Yıldız Sandığı) -->
+        <div
+          class="bg-gradient-to-r from-amber-100 via-yellow-100 to-amber-200 border-3 border-amber-400 rounded-2xl px-3 py-1.5 flex items-center space-x-1.5 sm:space-x-2 shadow-sm transform hover:scale-105 transition cursor-default">
+          <i class="fa-solid fa-star text-amber-500 text-lg sm:text-2xl star-pulse filter drop-shadow"></i>
+          <span id="star-count" class="font-heading font-black text-amber-900 text-base sm:text-xl">0</span>
+          <span class="text-[11px] font-black text-amber-800 hidden sm:inline">⭐ Puan</span>
+        </div>
+
+        <!-- Kartım Modal Butonu -->
+        <button onclick="toggleQRModal()" title="Sihirli Kartım"
+          class="bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-500 hover:from-teal-500 hover:to-emerald-500 text-white font-heading font-black px-3.5 py-2 rounded-2xl text-xs sm:text-sm transition flex items-center space-x-1.5 shadow-md border-b-3 border-teal-700 active:translate-y-0.5 active:border-b-0">
+          <i class="fa-solid fa-qrcode text-base"></i>
+          <span>Kartım ✨</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-4xl mx-auto px-4 mt-6">
+
+    <!-- HERO BANNER (SİHİRLİ MACERA HARİTASI) -->
+    <div
+      class="bg-gradient-to-r from-teal-400 via-teal-500 to-emerald-400 rounded-[2.5rem] p-6 sm:p-7 text-white shadow-2xl mb-8 relative overflow-hidden border-4 border-amber-300">
+      <!-- Arka Plan Süs Balonları ve Parıltılar -->
+      <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="absolute top-2 left-6 text-xl select-none opacity-80">🎈</div>
+      <div class="absolute bottom-4 left-1/3 text-lg select-none opacity-80">✨</div>
+      <div class="absolute top-4 right-1/4 text-xl select-none opacity-80">🌟</div>
+
+      <div class="relative z-10 max-w-lg">
+        <span
+          class="bg-white/25 text-yellow-100 text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider mb-2.5 inline-flex items-center gap-1.5 backdrop-blur-md border border-white/30 badge-wiggle shadow-sm">
+          <span>🌈</span> Sevimli Karşılama Rehberin <span>✨</span>
+        </span>
+        <h1 class="text-2xl sm:text-4xl font-heading font-black mb-2 text-white drop-shadow-md">
+          Sihirli Hastane Haritam 🗺️
+        </h1>
+        <p class="text-teal-50 text-xs sm:text-base font-bold leading-relaxed drop-shadow-sm">
+          Burası senin iyileşme maceranın başladığı yer! Aşağıdaki renkli kutulara dokunarak odanı, aletleri ve süper
+          kahramanlarını keşfet! 🚀
+        </p>
+      </div>
+      <!-- Decorative Mascot Graphic -->
+      <div class="absolute -right-3 -bottom-5 opacity-90 sm:opacity-100 pointer-events-none bubble-float">
+        <div class="text-8xl sm:text-9xl transform -rotate-6 filter drop-shadow-2xl">
+          🐻‍⚕️
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN MODULES GRID (4 SEVİMLİ VE OYUNSU KUTU) -->
+    <div id="main-modules-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
+
+      <!-- MODÜL 1: SERVİS VE ODAM (GÖKYÜZÜ MAVİSİ TEMASI) -->
+      <div onclick="openModule('video-module')"
+        class="card-bounce bg-gradient-to-br from-sky-100 via-blue-50 to-sky-200 rounded-[2rem] p-6 border-4 border-sky-300 shadow-xl cursor-pointer hover:border-sky-400 hover:shadow-sky-300/60 relative overflow-hidden group">
+        <div class="flex items-center justify-between mb-4">
+          <div
+            class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-400 to-blue-600 text-white flex items-center justify-center text-3xl group-hover:scale-115 group-hover:rotate-12 transition shadow-lg shadow-sky-500/40 border-2 border-white">
+            🎬
+          </div>
+          <span
+            class="text-[11px] font-black bg-sky-500 text-white px-3 py-1 rounded-full uppercase tracking-wider shadow-sm border border-sky-300">
+            Kutu 01 🚀
+          </span>
+        </div>
+        <h3 class="text-2xl font-heading font-black text-sky-950 mb-1.5">Servisimiz ve Odam 🎥</h3>
+        <p class="text-xs sm:text-sm text-sky-900 font-bold leading-relaxed mb-4">
+          Odanı, rahat yatağını ve yatak başındaki sihirli hemşire çağırma butonunu keşfet!
+        </p>
+        <div
+          class="inline-flex items-center text-xs font-black bg-white text-sky-700 px-4 py-2 rounded-2xl border-2 border-sky-300 group-hover:bg-sky-500 group-hover:text-white transition shadow-sm gap-2">
+          <span>Videoyu İzle</span>
+          <i class="fa-solid fa-play text-[10px]"></i>
+        </div>
+      </div>
+
+      <!-- MODÜL 2: SİHİRLİ ALETLER KUTUSU (NEŞELİ PEMBE/MERCAN TEMASI) -->
+      <div onclick="openModule('tools-module')"
+        class="card-bounce bg-gradient-to-br from-rose-100 via-pink-50 to-rose-200 rounded-[2rem] p-6 border-4 border-rose-300 shadow-xl cursor-pointer hover:border-rose-400 hover:shadow-rose-300/60 relative overflow-hidden group">
+        <div class="flex items-center justify-between mb-4">
+          <div
+            class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-rose-400 to-pink-600 text-white flex items-center justify-center text-3xl group-hover:scale-115 group-hover:rotate-12 transition shadow-lg shadow-rose-500/40 border-2 border-white">
+            🩺
+          </div>
+          <span
+            class="text-[11px] font-black bg-rose-500 text-white px-3 py-1 rounded-full uppercase tracking-wider shadow-sm border border-rose-300">
+            Kutu 02 ✨
+          </span>
+        </div>
+        <h3 class="text-2xl font-heading font-black text-rose-950 mb-1.5">Sihirli Aletler Kutusu 🩹</h3>
+        <p class="text-xs sm:text-sm text-rose-900 font-bold leading-relaxed mb-4">
+          Tansiyon aleti, sihirli su ve steteskop ne işe yarar? Dokun ve hemen öğren!
+        </p>
+        <div
+          class="inline-flex items-center text-xs font-black bg-white text-rose-700 px-4 py-2 rounded-2xl border-2 border-rose-300 group-hover:bg-rose-500 group-hover:text-white transition shadow-sm gap-2">
+          <span>Aletleri Keşfet</span>
+          <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
+        </div>
+      </div>
+
+      <!-- MODÜL 3: SÜPER KAHRAMANLARIM (ALTIN GÜNEŞ & AMBER TEMASI) -->
+      <div onclick="openModule('team-module')"
+        class="card-bounce bg-gradient-to-br from-amber-100 via-yellow-50 to-orange-200 rounded-[2rem] p-6 border-4 border-amber-300 shadow-xl cursor-pointer hover:border-amber-400 hover:shadow-amber-300/60 relative overflow-hidden group">
+        <div class="flex items-center justify-between mb-4">
+          <div
+            class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-400 to-orange-500 text-white flex items-center justify-center text-3xl group-hover:scale-115 group-hover:rotate-12 transition shadow-lg shadow-amber-500/40 border-2 border-white">
+            🦸‍♀️
+          </div>
+          <span
+            class="text-[11px] font-black bg-amber-500 text-white px-3 py-1 rounded-full uppercase tracking-wider shadow-sm border border-amber-300">
+            Kutu 03 🌟
+          </span>
+        </div>
+        <h3 class="text-2xl font-heading font-black text-amber-950 mb-1.5">Süper Kahramanlarım 👑</h3>
+        <p class="text-xs sm:text-sm text-amber-900 font-bold leading-relaxed mb-4">
+          Hemşire ablalar, doktorlar ve servis abileri sana nasıl yardım eder? Tanışalım!
+        </p>
+        <div
+          class="inline-flex items-center text-xs font-black bg-white text-amber-800 px-4 py-2 rounded-2xl border-2 border-amber-300 group-hover:bg-amber-500 group-hover:text-white transition shadow-sm gap-2">
+          <span>Ekibi Tanı</span>
+          <i class="fa-solid fa-heart text-[10px] text-rose-500"></i>
+        </div>
+      </div>
+
+      <!-- MODÜL 4: SAĞLIK GÖREVLERİ & RÜTBELER (ZÜMRÜT & NANE TEMASI) -->
+      <div onclick="openModule('tips-module')"
+        class="card-bounce bg-gradient-to-br from-emerald-100 via-teal-50 to-green-200 rounded-[2rem] p-6 border-4 border-emerald-300 shadow-xl cursor-pointer hover:border-emerald-400 hover:shadow-emerald-300/60 relative overflow-hidden group">
+        <div class="flex items-center justify-between mb-4">
+          <div
+            class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-600 text-white flex items-center justify-center text-3xl group-hover:scale-115 group-hover:rotate-12 transition shadow-lg shadow-emerald-500/40 border-2 border-white">
+            🏆
+          </div>
+          <span
+            class="text-[11px] font-black bg-emerald-600 text-white px-3 py-1 rounded-full uppercase tracking-wider shadow-sm border border-emerald-300">
+            Kutu 04 ⭐
+          </span>
+        </div>
+        <h3 class="text-2xl font-heading font-black text-emerald-950 mb-1.5">Sağlık Görevleri & Rütbeler 👑</h3>
+        <p class="text-xs sm:text-sm text-emerald-900 font-bold leading-relaxed mb-4">
+          Görevleri tamamla, yıldızları topla ve süper rütbelerin kilitlerini aç!
+        </p>
+        <div
+          class="inline-flex items-center text-xs font-black bg-white text-emerald-800 px-4 py-2 rounded-2xl border-2 border-emerald-300 group-hover:bg-emerald-600 group-hover:text-white transition shadow-sm gap-2">
+          <span>Görevleri Gör</span>
+          <i class="fa-solid fa-star text-[10px] text-amber-500"></i>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DYNAMIC DETAILED CONTENT SECTION (AÇILAN BÜYÜK EKRAN) -->
+    <div id="content-display-area"
+      class="bg-white/95 backdrop-blur rounded-[2.5rem] p-5 sm:p-8 border-4 border-amber-300 shadow-2xl transition-all hidden">
+
+      <!-- MODULE 1 CONTENT: VIDEO PLAYER (YOUTUBE EMBED) -->
+      <div id="video-module" class="hidden">
+        <div
+          class="flex items-center justify-between mb-5 bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 p-4 sm:p-5 rounded-3xl text-white shadow-lg border-2 border-white/40">
+          <div class="flex items-center space-x-3">
+            <span class="text-3xl sm:text-4xl bg-white/25 p-2 rounded-2xl backdrop-blur-sm shadow-inner">🎬</span>
+            <div>
+              <h3 class="text-lg sm:text-2xl font-heading font-black text-white drop-shadow">Servis Tanıtım Sineması 🍿
+              </h3>
+              <p class="text-xs sm:text-sm text-sky-100 font-bold">Odamızı, yatağımızı ve çağrı butonunu keyifle izle!
+              </p>
+            </div>
+          </div>
+          <button onclick="closeModule()"
+            class="text-sky-950 bg-amber-300 hover:bg-amber-400 font-heading font-black text-xs sm:text-sm px-4 py-2 rounded-2xl transition flex items-center space-x-1.5 shadow-md border-b-3 border-amber-500 active:translate-y-0.5">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Haritaya Dön 🎈</span>
+          </button>
+        </div>
+
+        <!-- Real YouTube Video Player Container (Dış Bağlantılara ve YouTube'a Çıkış Tamamen Engellendi) -->
+        <div
+          class="relative bg-slate-900 rounded-3xl aspect-video overflow-hidden shadow-2xl border-4 border-sky-300 select-none">
+          <!-- Sandboxed Iframe -->
+          <iframe id="youtube-player" class="w-full h-full pointer-events-none"
+            src="https://www.youtube.com/embed/m8jLPCMcbaQ?enablejsapi=1&controls=0&disablekb=1&fs=0&rel=0&playsinline=1&modestbranding=1"
+            title="Servis Tanıtım Videosu" frameborder="0" sandbox="allow-scripts allow-same-origin allow-presentation"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen>
+          </iframe>
+
+          <!-- İnteraktif Dokunmatik Koruma Kalkanı -->
+          <div onclick="togglePlayPauseVideo()" title="Videoyu Oynat / Durdur"
+            class="absolute inset-0 z-20 cursor-pointer flex items-center justify-center bg-transparent group/player">
+            <!-- Ortadaki Sevimli Oynat / Durdur İkonu -->
+            <div id="video-center-play-overlay"
+              class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 hover:from-sky-500 hover:to-blue-700 text-white flex items-center justify-center text-3xl sm:text-4xl shadow-2xl border-4 border-white transition transform group-hover/player:scale-115">
+              <i class="fa-solid fa-play ml-1" id="center-icon-symbol"></i>
+            </div>
+          </div>
+
+          <!-- Sağ Üst Köşe: Ses Kontrol Paneli -->
+          <div id="video-volume-panel"
+            class="absolute top-3 right-3 z-30 bg-black/70 hover:bg-black/85 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center space-x-2 shadow-xl border border-white/20 transition">
+
+            <!-- Mute / Unmute Toggle -->
+            <button onclick="toggleMuteVideo()" title="Sesi Aç / Kapat"
+              class="hover:scale-110 transition active:scale-95 flex items-center justify-center">
+              <i class="fa-solid fa-volume-high text-emerald-300 text-base" id="sound-btn-icon"></i>
+            </button>
+
+            <!-- Volume Down (-) -->
+            <button onclick="changeVolume(-10)" title="Sesi Azalt (-%10)"
+              class="w-6 h-6 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center transition active:scale-90 text-[10px]">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+
+            <!-- Volume Level % Badge -->
+            <span id="sound-level-badge" class="font-mono text-xs w-8 text-center font-black text-teal-200">100%</span>
+
+            <!-- Volume Up (+) -->
+            <button onclick="changeVolume(10)" title="Sesi Arttır (+%10)"
+              class="w-6 h-6 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center transition active:scale-90 text-[10px]">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Video Key Takeaways -->
+        <div
+          class="mt-4 bg-gradient-to-br from-sky-50 via-teal-50 to-blue-100 rounded-3xl p-5 border-3 border-sky-300 shadow-md">
+          <h4 class="font-heading font-black text-sky-950 text-base sm:text-lg mb-2 flex items-center gap-2">
+            <span class="text-2xl animate-bounce">💡</span> Minik Kahramanın İpuçları:
+          </h4>
+          <ul class="text-xs sm:text-sm text-sky-950 space-y-2 font-bold">
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-600 text-base">🔴</span>
+              <span>Yatağının yanındaki kırmızı düğmeye bastığında hemşire ablan anında yardıma koşar!</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-amber-500 text-base">🎨</span>
+              <span>Oyun odasında rengarenk boyamalar yapabilir ve sevimli kitaplar okuyabilirsin.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-purple-500 text-base">🌙</span>
+              <span>Sihirli gece lamban her zaman yanar, karanlıktan hiç korkmana gerek yok!</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- MODULE 2 CONTENT: MEDICAL TOOLS -->
+      <div id="tools-module" class="hidden">
+        <div
+          class="flex items-center justify-between mb-5 bg-gradient-to-r from-rose-400 via-pink-500 to-rose-600 p-4 sm:p-5 rounded-3xl text-white shadow-lg border-2 border-white/40">
+          <div class="flex items-center space-x-3">
+            <span class="text-3xl sm:text-4xl bg-white/25 p-2 rounded-2xl backdrop-blur-sm shadow-inner">🩺</span>
+            <div>
+              <h3 class="text-lg sm:text-2xl font-heading font-black text-white drop-shadow">Sihirli Aletler Sandığı ✨
+              </h3>
+              <p class="text-xs sm:text-sm text-rose-100 font-bold">Merak ettiğin alete dokun, sırrını öğren!</p>
+            </div>
+          </div>
+          <button onclick="closeModule()"
+            class="text-rose-950 bg-amber-300 hover:bg-amber-400 font-heading font-black text-xs sm:text-sm px-4 py-2 rounded-2xl transition flex items-center space-x-1.5 shadow-md border-b-3 border-amber-500 active:translate-y-0.5">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Haritaya Dön 🎈</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3.5 sm:gap-4">
+          <!-- Tool 1: Tansiyon -->
+          <div onclick="showToolDetail('tansiyon')"
+            class="card-bounce bg-gradient-to-br from-rose-100 via-pink-50 to-rose-100 hover:from-rose-200 hover:to-pink-100 border-3 border-rose-300 hover:border-rose-400 rounded-3xl p-4 text-center cursor-pointer transition shadow-md">
+            <div class="text-5xl mb-2 filter drop-shadow">🩹</div>
+            <h4 class="font-heading font-black text-rose-950 text-sm sm:text-base mb-1">Tansiyon Aleti</h4>
+            <span
+              class="inline-block text-[10px] sm:text-[11px] text-rose-800 bg-rose-200/90 px-3 py-1 rounded-xl font-black shadow-2xs">
+              🤗 Koluna sevgiyle sarılır
+            </span>
+          </div>
+          <!-- Tool 2: Steteskop -->
+          <div onclick="showToolDetail('steteskop')"
+            class="card-bounce bg-gradient-to-br from-purple-100 via-indigo-50 to-purple-100 hover:from-purple-200 hover:to-indigo-100 border-3 border-purple-300 hover:border-purple-400 rounded-3xl p-4 text-center cursor-pointer transition shadow-md">
+            <div class="text-5xl mb-2 filter drop-shadow">🎧</div>
+            <h4 class="font-heading font-black text-purple-950 text-sm sm:text-base mb-1">Steteskop</h4>
+            <span
+              class="inline-block text-[10px] sm:text-[11px] text-purple-800 bg-purple-200/90 px-3 py-1 rounded-xl font-black shadow-2xs">
+              🎶 Kalbinin şarkısını dinler
+            </span>
+          </div>
+          <!-- Tool 3: Serum -->
+          <div onclick="showToolDetail('serum')"
+            class="card-bounce bg-gradient-to-br from-sky-100 via-cyan-50 to-blue-100 hover:from-sky-200 hover:to-cyan-100 border-3 border-sky-300 hover:border-sky-400 rounded-3xl p-4 text-center cursor-pointer transition shadow-md">
+            <div class="text-5xl mb-2 filter drop-shadow">💧</div>
+            <h4 class="font-heading font-black text-sky-950 text-sm sm:text-base mb-1">Sihirli Su (Serum)</h4>
+            <span
+              class="inline-block text-[10px] sm:text-[11px] text-sky-800 bg-sky-200/90 px-3 py-1 rounded-xl font-black shadow-2xs">
+              ⚡ Süper enerji damlacıkları
+            </span>
+          </div>
+          <!-- Tool 4: Enjektör -->
+          <div onclick="showToolDetail('enjektor')"
+            class="card-bounce bg-gradient-to-br from-emerald-100 via-teal-50 to-emerald-100 hover:from-emerald-200 hover:to-teal-100 border-3 border-emerald-300 hover:border-emerald-400 rounded-3xl p-4 text-center cursor-pointer transition shadow-md">
+            <div class="text-5xl mb-2 filter drop-shadow">💉</div>
+            <h4 class="font-heading font-black text-emerald-950 text-sm sm:text-base mb-1">Enjektör</h4>
+            <span
+              class="inline-block text-[10px] sm:text-[11px] text-emerald-800 bg-emerald-200/90 px-3 py-1 rounded-xl font-black shadow-2xs">
+              🛡️ Mikrop kovalayan kalkan
+            </span>
+          </div>
+          <!-- Tool 5: Pulsoksimetre -->
+          <div onclick="showToolDetail('pulsoksimetre')"
+            class="card-bounce bg-gradient-to-br from-amber-100 via-yellow-50 to-amber-100 hover:from-amber-200 hover:to-yellow-100 border-3 border-amber-300 hover:border-amber-400 rounded-3xl p-4 text-center cursor-pointer transition shadow-md">
+            <div class="text-5xl mb-2 filter drop-shadow">🐤</div>
+            <h4 class="font-heading font-black text-amber-950 text-sm sm:text-base mb-1">Işıklı Parmak Klipsi</h4>
+            <span
+              class="inline-block text-[10px] sm:text-[11px] text-amber-800 bg-amber-200/90 px-3 py-1 rounded-xl font-black shadow-2xs">
+              🔴 Kırmızı ışıklı oksijen ölçer
+            </span>
+          </div>
+          <!-- Tool 6: Ateşölçer -->
+          <div onclick="showToolDetail('atesolcer')"
+            class="card-bounce bg-gradient-to-br from-orange-100 via-amber-50 to-orange-100 hover:from-orange-200 hover:to-amber-100 border-3 border-orange-300 hover:border-orange-400 rounded-3xl p-4 text-center cursor-pointer transition shadow-md">
+            <div class="text-5xl mb-2 filter drop-shadow">🌡️</div>
+            <h4 class="font-heading font-black text-orange-950 text-sm sm:text-base mb-1">Ateşölçer</h4>
+            <span
+              class="inline-block text-[10px] sm:text-[11px] text-orange-800 bg-orange-200/90 px-3 py-1 rounded-xl font-black shadow-2xs">
+              ✨ Sihirli ışıklı sıcaklık ölçer
+            </span>
+          </div>
+        </div>
+
+        <!-- Tool Detail Pop-up Message -->
+        <div id="tool-detail-box"
+          class="mt-6 bg-gradient-to-br from-pink-50 via-rose-50 to-amber-50 border-3 border-rose-300 rounded-3xl p-5 shadow-lg hidden animate-fadeIn">
+          <div class="flex items-start space-x-4">
+            <div id="tool-icon" class="text-5xl filter drop-shadow shrink-0 animate-bounce">🩹</div>
+            <div>
+              <div
+                class="inline-block bg-rose-200 text-rose-900 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase mb-1">
+                Sihirli Bilgi 📖</div>
+              <h4 id="tool-title" class="font-heading font-black text-rose-950 text-lg sm:text-xl">Tansiyon Aleti</h4>
+              <p id="tool-desc" class="text-xs sm:text-sm text-slate-800 font-bold mt-1.5 leading-relaxed">
+                Bu alet kolunu yumuşacık bir kumaşla sarar ve sana güç kucaklaması yapar! Kalbinin ne kadar güçlü
+                attığını ölçer. Hiç canın acımaz.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODULE 3 CONTENT: TEAM -->
+      <div id="team-module" class="hidden">
+        <div
+          class="flex items-center justify-between mb-5 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 p-4 sm:p-5 rounded-3xl text-white shadow-lg border-2 border-white/40">
+          <div class="flex items-center space-x-3">
+            <span class="text-3xl sm:text-4xl bg-white/25 p-2 rounded-2xl backdrop-blur-sm shadow-inner">🦸‍♀️</span>
+            <div>
+              <h3 class="text-lg sm:text-2xl font-heading font-black text-white drop-shadow">Süper Kahraman Ekibimiz 👑
+              </h3>
+              <p class="text-xs sm:text-sm text-amber-100 font-bold">Serviste sana kucak açan cana yakın dostlar!</p>
+            </div>
+          </div>
+          <button onclick="closeModule()"
+            class="text-amber-950 bg-amber-300 hover:bg-amber-400 font-heading font-black text-xs sm:text-sm px-4 py-2 rounded-2xl transition flex items-center space-x-1.5 shadow-md border-b-3 border-amber-500 active:translate-y-0.5">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Haritaya Dön 🎈</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Hero 1: Doktor -->
+          <div
+            class="bg-gradient-to-br from-teal-50 via-cyan-50 to-teal-100 border-3 border-teal-300 rounded-3xl p-5 text-center shadow-md flex flex-col items-center">
+            <div
+              class="w-18 h-18 bg-gradient-to-tr from-teal-400 to-emerald-500 rounded-full flex items-center justify-center text-4xl mb-3 shadow-md border-3 border-white ring-2 ring-teal-200">
+              🩺
+            </div>
+            <h4 class="font-heading font-black text-teal-950 text-lg mb-1">Doktorun 🌟</h4>
+            <p
+              class="text-xs text-teal-950 font-bold leading-relaxed bg-white/80 p-3 rounded-2xl border border-teal-200">
+              "Merhaba cesur kaşif! Vücudunu ve sağlığını korumak için buradayım. Merak ettiğin her şeyi bana çekinmeden
+              sorabilirsin!"
+            </p>
+          </div>
+
+          <!-- Hero 2: Hemşire -->
+          <div
+            class="bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100 border-3 border-rose-300 rounded-3xl p-5 text-center shadow-md flex flex-col items-center">
+            <div
+              class="w-18 h-18 bg-gradient-to-tr from-rose-400 to-pink-500 rounded-full flex items-center justify-center text-4xl mb-3 shadow-md border-3 border-white ring-2 ring-rose-200">
+              💖
+            </div>
+            <h4 class="font-heading font-black text-rose-950 text-lg mb-1">Hemşiren 🤗</h4>
+            <p
+              class="text-xs text-rose-950 font-bold leading-relaxed bg-white/80 p-3 rounded-2xl border border-rose-200">
+              "Merhaba minik kahraman! İyileşme yolculuğunda her an yanındayım. Bir şeye ihtiyacın olursa sihirli
+              kırmızı düğmeye basman yeterli!"
+            </p>
+          </div>
+
+          <!-- Hero 3: Sosyal Çalışmacı -->
+          <div
+            class="bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-100 border-3 border-purple-300 rounded-3xl p-5 text-center shadow-md flex flex-col items-center">
+            <div
+              class="w-18 h-18 bg-gradient-to-tr from-purple-400 to-indigo-500 rounded-full flex items-center justify-center text-4xl mb-3 shadow-md border-3 border-white ring-2 ring-purple-200">
+              🎨
+            </div>
+            <h4 class="font-heading font-black text-purple-950 text-lg mb-1">Oyun Arkadaşın 🎈</h4>
+            <p
+              class="text-xs text-purple-950 font-bold leading-relaxed bg-white/80 p-3 rounded-2xl border border-purple-200">
+              "Oyun odasındaki renkli dünyamızda seni bekliyorum! Birlikte harika resimler yapıp çok eğleneceğiz!"
+            </p>
+          </div>
+
+          <!-- Hero 4: Yemekhane Görevlisi -->
+          <div
+            class="bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 border-3 border-amber-300 rounded-3xl p-5 text-center shadow-md flex flex-col items-center">
+            <div
+              class="w-18 h-18 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-4xl mb-3 shadow-md border-3 border-white ring-2 ring-amber-200">
+              🍲
+            </div>
+            <h4 class="font-heading font-black text-amber-950 text-lg mb-1">Lezzet Şefi 🥣</h4>
+            <p
+              class="text-xs text-amber-950 font-bold leading-relaxed bg-white/80 p-3 rounded-2xl border border-amber-200">
+              "Sana süper güç ve enerji verecek en lezzetli yemekleri getiriyorum! Tabağındaki her lokma senin süper
+              gücün!"
+            </p>
+          </div>
+
+          <!-- Hero 5: Temizlik Görevlisi -->
+          <div
+            class="bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-100 border-3 border-cyan-300 rounded-3xl p-5 text-center shadow-md flex flex-col items-center sm:col-span-2 lg:col-span-1">
+            <div
+              class="w-18 h-18 bg-gradient-to-tr from-cyan-400 to-blue-500 rounded-full flex items-center justify-center text-4xl mb-3 shadow-md border-3 border-white ring-2 ring-cyan-200">
+              🧼
+            </div>
+            <h4 class="font-heading font-black text-cyan-950 text-lg mb-1">Hijyen Muhafızı ✨</h4>
+            <p
+              class="text-xs text-cyan-950 font-bold leading-relaxed bg-white/80 p-3 rounded-2xl border border-cyan-200">
+              "Odanı ve servisimizi mikroplardan korumak için pırıl pırıl temizliyorum. Sen sadece dinlenmene bak!"
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODULE 4 CONTENT: HEALTH TASKS & RANKS -->
+      <div id="tips-module" class="hidden">
+        <div
+          class="flex items-center justify-between mb-5 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 p-4 sm:p-5 rounded-3xl text-white shadow-lg border-2 border-white/40">
+          <div class="flex items-center space-x-3">
+            <span class="text-3xl sm:text-4xl bg-white/25 p-2 rounded-2xl backdrop-blur-sm shadow-inner">👑</span>
+            <div>
+              <h3 class="text-lg sm:text-2xl font-heading font-black text-white drop-shadow">Sağlık Görevleri & Rütbeler
+                🏆</h3>
+              <p class="text-xs sm:text-sm text-emerald-100 font-bold">Görevleri yap, yıldızları topla, şampiyon ol!</p>
+            </div>
+          </div>
+          <button onclick="closeModule()"
+            class="text-emerald-950 bg-amber-300 hover:bg-amber-400 font-heading font-black text-xs sm:text-sm px-4 py-2 rounded-2xl transition flex items-center space-x-1.5 shadow-md border-b-3 border-amber-500 active:translate-y-0.5">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Haritaya Dön 🎈</span>
+          </button>
+        </div>
+
+        <!-- RANK & PROGRESSION CARD (STICKY / SABİT KALAN ALAN) -->
+        <div
+          class="sticky top-[72px] sm:top-[80px] z-20 bg-gradient-to-br from-amber-50/95 via-emerald-50/95 to-teal-50/95 backdrop-blur-md rounded-3xl p-4 sm:p-5 border-3 border-amber-300 shadow-xl mb-6">
+          <div class="flex items-center justify-between gap-3 mb-2">
+            <div>
+              <span
+                class="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-200 px-3 py-0.5 rounded-full">
+                👑 Mevcut Rütben
+              </span>
+              <h4 id="current-rank-display" class="font-heading font-black text-xl sm:text-2xl text-emerald-950 mt-1">
+                🥉 Meraklı Keşifçi
+              </h4>
+            </div>
+            <div
+              class="flex items-center space-x-2 bg-amber-100 border-2 border-amber-300 px-3.5 py-1.5 rounded-2xl shadow-sm">
+              <i class="fa-solid fa-star text-amber-500 text-xl star-pulse"></i>
+              <span id="rank-progress-text" class="text-xs sm:text-sm font-black text-amber-950">15 / 76+ Puan</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div
+            class="w-full bg-slate-200 rounded-full h-4 overflow-hidden shadow-inner mb-3 p-0.5 border border-slate-300">
+            <div id="rank-progress-bar"
+              class="bg-gradient-to-r from-amber-400 via-yellow-300 to-emerald-500 h-full rounded-full transition-all duration-500 shadow-sm"
+              style="width: 20%;"></div>
+          </div>
+
+          <!-- Motivating Description / Guidance Sentence -->
+          <div id="rank-motivation-box"
+            class="bg-white/90 backdrop-blur-sm rounded-2xl p-3 border border-emerald-200 shadow-xs flex items-center space-x-2.5">
+            <span class="text-2xl shrink-0 animate-bounce">✨</span>
+            <p id="rank-motivation-text" class="text-xs sm:text-sm text-emerald-950 font-black leading-snug">
+              Harika bir başlangıç! Aşağıdaki görevleri tamamlayarak puanlarını topla ve Cesur Çırak rütbesine yüksel!
+              🚀
+            </p>
+          </div>
+        </div>
+
+        <!-- 5 SAĞLIK GÖREVİ LİSTESİ -->
+        <h4 class="font-heading font-black text-emerald-950 text-base mb-3 flex items-center gap-2">
+          <span>🎯</span> Günlük Sağlık Görevlerin:
+        </h4>
+
+        <div class="space-y-3">
+          <!-- Görev 1: Su İçme (Mavi) -->
+          <div data-task-id="task-water" onclick="claimReward('task-water', 10)"
+            class="task-card card-bounce bg-gradient-to-r from-sky-50 via-blue-50 to-sky-100 hover:from-sky-100 hover:to-blue-100 border-3 border-sky-300 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer transition shadow-md group">
+            <div class="flex items-start space-x-3.5">
+              <span
+                class="text-4xl sm:text-5xl shrink-0 group-hover:scale-115 group-hover:rotate-6 transition filter drop-shadow">💧</span>
+              <div>
+                <h5 class="font-heading font-black text-sky-950 text-base sm:text-lg">Sihirli İksir (Su İçme Görevi)
+                </h5>
+                <p class="text-xs sm:text-sm text-sky-900 font-bold mt-1 leading-relaxed">
+                  "Vücudunun süper enerjisini toplamak için bugün bol bol suyunu iç! Her yudum seni daha da güçlü
+                  yapacak!"
+                </p>
+              </div>
+            </div>
+            <span
+              class="reward-badge bg-sky-500 hover:bg-sky-600 text-white text-xs sm:text-sm font-black px-4 py-2 rounded-2xl shadow-md self-end sm:self-center shrink-0 transition border-b-3 border-sky-700">
+              +10 ⭐ Yıldız
+            </span>
+          </div>
+
+          <!-- Görev 2: Tabağı Bitirme (Sarı/Amber) -->
+          <div data-task-id="task-food" onclick="claimReward('task-food', 15)"
+            class="task-card card-bounce bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-100 hover:from-amber-100 hover:to-yellow-100 border-3 border-amber-300 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer transition shadow-md group">
+            <div class="flex items-start space-x-3.5">
+              <span
+                class="text-4xl sm:text-5xl shrink-0 group-hover:scale-115 group-hover:rotate-6 transition filter drop-shadow">🍲</span>
+              <div>
+                <h5 class="font-heading font-black text-amber-950 text-base sm:text-lg">Güç Depolama (Yemeğini Bitirme)
+                </h5>
+                <p class="text-xs sm:text-sm text-amber-900 font-bold mt-1 leading-relaxed">
+                  "Senin için hazırlanan lezzetli yemeğini yiyerek kaslarını güçlendir! Tabağındaki her lokma süper
+                  güç!"
+                </p>
+              </div>
+            </div>
+            <span
+              class="reward-badge bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-black px-4 py-2 rounded-2xl shadow-md self-end sm:self-center shrink-0 transition border-b-3 border-amber-700">
+              +15 ⭐ Yıldız
+            </span>
+          </div>
+
+          <!-- Görev 3: El Yıkama & Hijyen (Zümrüt/Nane) -->
+          <div data-task-id="task-hygiene" onclick="claimReward('task-hygiene', 10)"
+            class="task-card card-bounce bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100 hover:from-emerald-100 hover:to-teal-100 border-3 border-emerald-300 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer transition shadow-md group">
+            <div class="flex items-start space-x-3.5">
+              <span
+                class="text-4xl sm:text-5xl shrink-0 group-hover:scale-115 group-hover:rotate-6 transition filter drop-shadow">🧼</span>
+              <div>
+                <h5 class="font-heading font-black text-emerald-950 text-base sm:text-lg">Mikrop Avcısı (El Yıkama)</h5>
+                <p class="text-xs sm:text-sm text-emerald-900 font-bold mt-1 leading-relaxed">
+                  "Ellerini sabun ve bol suyla 20 saniye yıka, mikropları hemen kov! Temiz eller en büyük kalkanındır!"
+                </p>
+              </div>
+            </div>
+            <span
+              class="reward-badge bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm font-black px-4 py-2 rounded-2xl shadow-md self-end sm:self-center shrink-0 transition border-b-3 border-emerald-700">
+              +10 ⭐ Yıldız
+            </span>
+          </div>
+
+          <!-- Görev 4: İlaç İçme & Tedavi Uyum (Mor/Pembe) -->
+          <div data-task-id="task-medicine" onclick="claimReward('task-medicine', 20)"
+            class="task-card card-bounce bg-gradient-to-r from-purple-50 via-pink-50 to-purple-100 hover:from-purple-100 hover:to-pink-100 border-3 border-purple-300 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer transition shadow-md group">
+            <div class="flex items-start space-x-3.5">
+              <span
+                class="text-4xl sm:text-5xl shrink-0 group-hover:scale-115 group-hover:rotate-6 transition filter drop-shadow">🦸‍♀️</span>
+              <div>
+                <h5 class="font-heading font-black text-purple-950 text-base sm:text-lg">Cesaret Zamanı (İlaç Görevi)
+                </h5>
+                <p class="text-xs sm:text-sm text-purple-900 font-bold mt-1 leading-relaxed">
+                  "Hemşiren sana ilacını getirdiğinde cesurca al ve iç. Vücudunun mikropları yenmesi için ona yardım
+                  et!"
+                </p>
+              </div>
+            </div>
+            <span
+              class="reward-badge bg-purple-500 hover:bg-purple-600 text-white text-xs sm:text-sm font-black px-4 py-2 rounded-2xl shadow-md self-end sm:self-center shrink-0 transition border-b-3 border-purple-700">
+              +20 ⭐ Yıldız
+            </span>
+          </div>
+
+          <!-- Görev 5: Uyku Vakti (İndigo/Gece Mavisi) -->
+          <div data-task-id="task-sleep" onclick="claimReward('task-sleep', 10)"
+            class="task-card card-bounce bg-gradient-to-r from-indigo-50 via-blue-50 to-indigo-100 hover:from-indigo-100 hover:to-blue-100 border-3 border-indigo-300 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer transition shadow-md group">
+            <div class="flex items-start space-x-3.5">
+              <span
+                class="text-4xl sm:text-5xl shrink-0 group-hover:scale-115 group-hover:rotate-6 transition filter drop-shadow">🌙</span>
+              <div>
+                <h5 class="font-heading font-black text-indigo-950 text-base sm:text-lg">Tatlı Rüyalar (Dinlenme Vakti)
+                </h5>
+                <p class="text-xs sm:text-sm text-indigo-900 font-bold mt-1 leading-relaxed">
+                  "Vücudunun kendini yenilemesi ve daha hızlı iyileşmek için zamanında yatağına geçip uyu. İyi uykular!"
+                </p>
+              </div>
+            </div>
+            <span
+              class="reward-badge bg-indigo-500 hover:bg-indigo-600 text-white text-xs sm:text-sm font-black px-4 py-2 rounded-2xl shadow-md self-end sm:self-center shrink-0 transition border-b-3 border-indigo-700">
+              +10 ⭐ Yıldız
+            </span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- STARTUP ONBOARDING / HASTA GİRİŞ & KAYIT MODAL -->
+  <div id="auth-modal"
+    class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div
+      class="bg-white rounded-3xl p-5 sm:p-7 max-w-lg w-full text-slate-800 border-4 border-teal-300 shadow-2xl relative my-auto max-h-[94vh] flex flex-col">
+
+      <!-- MODAL HEADER -->
+      <div class="text-center mb-4">
+        <div
+          class="w-16 h-16 bg-gradient-to-tr from-teal-400 via-amber-300 to-yellow-300 text-white rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-lg mb-2 border-3 border-white ring-4 ring-amber-300 transform hover:rotate-12 transition">
+          🏥
+        </div>
+        <h3 id="auth-modal-main-title" class="text-2xl sm:text-3xl font-heading font-black text-teal-950">Kahraman Çocuk
+          Portalı 🌟</h3>
+        <p id="auth-modal-sub-title" class="text-xs sm:text-sm text-teal-800 font-bold">Manisa Celal Bayar Üniversitesi
+          Çocuk Sağlığı ve Hastalıkları</p>
+      </div>
+
+      <!-- STEP 0: MAIN SELECTION (YENİ KAYIT MI / ESKİ KAYIT MI?) -->
+      <div id="auth-step-choice" class="space-y-3.5 py-2">
+        <p class="text-center text-xs sm:text-sm font-black text-teal-900 mb-2">🎈 Lütfen maceraya nasıl başlayacağını
+          seç:</p>
+
+        <!-- Buton 1: Yeni Gelen Çocuk (Yeni Kayıt) -->
+        <div onclick="startNewPatientFlow()"
+          class="card-bounce bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-100 hover:from-teal-100 hover:to-emerald-100 border-3 border-teal-300 hover:border-teal-400 rounded-3xl p-4 sm:p-5 cursor-pointer transition shadow-md flex items-center space-x-4 group">
+          <div
+            class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-teal-400 to-emerald-500 text-white flex items-center justify-center text-3xl shadow-md group-hover:scale-115 group-hover:rotate-12 transition border-2 border-white">
+            ✨
+          </div>
+          <div class="flex-1">
+            <h4 class="font-heading font-black text-teal-950 text-base sm:text-lg">Yeni Gelen Kahraman 🚀</h4>
+            <p class="text-xs text-teal-900 font-bold mt-0.5">İlk defa yatış yapan çocuğun bilgilerini gir ve sevimli
+              avatarını seç!</p>
+          </div>
+          <i class="fa-solid fa-chevron-right text-teal-600 text-lg group-hover:translate-x-1.5 transition"></i>
+        </div>
+
+        <!-- Buton 2: Kayıtlı Çocuk (Eski Kayıt) -->
+        <div onclick="showExistingPatientsList()"
+          class="card-bounce bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border-3 border-amber-300 hover:border-amber-400 rounded-3xl p-4 sm:p-5 cursor-pointer transition shadow-md flex items-center space-x-4 group">
+          <div
+            class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-400 to-orange-500 text-white flex items-center justify-center text-3xl shadow-md group-hover:scale-115 group-hover:rotate-12 transition border-2 border-white">
+            🧸
+          </div>
+          <div class="flex-1">
+            <h4 class="font-heading font-black text-amber-950 text-base sm:text-lg">Kayıtlı Kahramanlar Listesi 📋</h4>
+            <p class="text-xs text-amber-900 font-bold mt-0.5">Daha önce kayıt yapılmış çocuklar arasından kendi
+              profilini aç!</p>
+          </div>
+          <i class="fa-solid fa-chevron-right text-amber-600 text-lg group-hover:translate-x-1.5 transition"></i>
+        </div>
+      </div>
+
+      <!-- STEP 1: NURSE REGISTRATION (HEMŞİRE ADIMI) -->
+      <div id="auth-step-nurse" class="hidden space-y-3.5">
+        <div
+          class="bg-gradient-to-r from-teal-50 to-sky-50 border-3 border-teal-200 rounded-3xl p-3.5 flex items-start space-x-3">
+          <span class="text-3xl filter drop-shadow">🩺</span>
+          <div>
+            <h5 class="text-xs sm:text-sm font-black text-teal-950 font-heading">1. Aşama: Hemşire / Servis Girişi 📝
+            </h5>
+            <p class="text-[11px] sm:text-xs text-teal-900 font-bold">Lütfen çocuğun adını ve oda numarasını girip
+              telefonu minik kahramana veriniz.</p>
+          </div>
+        </div>
+
+        <form id="nurse-info-form" onsubmit="handleNurseStepSubmit(event)" class="space-y-3">
+          <div>
+            <label class="block text-xs font-black text-teal-950 mb-1">👤 Minik Kahramanın Adı & Soyadı:</label>
+            <input type="text" id="nurse-input-name" required placeholder="Örn: Efe Yılmaz"
+              class="w-full px-4 py-3 text-xs sm:text-sm bg-slate-50 border-2 border-slate-300 rounded-2xl focus:border-teal-400 focus:bg-white focus:outline-none transition font-bold">
+          </div>
+
+          <div>
+            <label class="block text-xs font-black text-teal-950 mb-1">🚪 Gizli Üs / Oda Numarası:</label>
+            <input type="text" id="nurse-input-room" required placeholder="Örn: 204"
+              class="w-full px-4 py-3 text-xs sm:text-sm bg-slate-50 border-2 border-slate-300 rounded-2xl focus:border-teal-400 focus:bg-white focus:outline-none transition font-bold">
+          </div>
+
+          <input type="hidden" id="nurse-generated-id" value="">
+
+          <div class="pt-2 flex items-center space-x-2">
+            <button type="button" onclick="showChoiceScreen()"
+              class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-heading font-black px-4 py-3 rounded-2xl text-xs transition">
+              ← Geri
+            </button>
+            <button type="submit"
+              class="flex-1 bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-500 hover:from-teal-500 hover:to-emerald-600 text-white font-heading font-black py-3 rounded-2xl shadow-md transition transform active:scale-98 flex items-center justify-center space-x-2 text-xs sm:text-sm border-b-3 border-teal-700">
+              <span>İlerle & Telefonu Çocuğa Ver 📱✨</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- STEP 2: KID AVATAR SELECTION (ÇOCUK AVATAR SEÇİM ADIMI) -->
+      <div id="auth-step-kid" class="hidden space-y-3.5">
+        <div
+          class="bg-gradient-to-r from-amber-50 via-yellow-50 to-teal-50 border-3 border-amber-300 rounded-3xl p-3.5 text-center shadow-inner">
+          <span id="kid-selected-avatar-hero-icon"
+            class="text-5xl filter drop-shadow animate-bounce inline-block">🦁</span>
+          <h4 class="font-heading font-black text-teal-950 text-base sm:text-lg mt-1">Süper Maskotunu Seç Minik
+            Kahraman! 👑</h4>
+          <p class="text-xs text-teal-900 font-bold">Hastanede senin koruyucu kahramanın ve en iyi arkadaşın hangi
+            hayvan olsun?</p>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-2 px-1">
+            <span class="text-xs font-black text-slate-700">Sevimli Hayvana Dokun:</span>
+            <span id="kid-selected-avatar-title"
+              class="text-teal-900 font-black text-xs bg-amber-200 px-3 py-1 rounded-full border border-amber-300 shadow-2xs">
+              🦁 Cesur Aslan
+            </span>
+          </div>
+          <!-- 12 Cute Animal Avatars -->
+          <div id="kid-avatar-picker-grid"
+            class="grid grid-cols-4 sm:grid-cols-6 gap-2.5 max-h-48 overflow-y-auto p-2.5 bg-gradient-to-br from-teal-50/50 to-amber-50/50 rounded-3xl border-2 border-teal-200">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <div class="pt-1 flex items-center space-x-2">
+          <button type="button" onclick="backToNurseStep()"
+            class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-heading font-black px-4 py-3 rounded-2xl text-xs transition">
+            ← Geri
+          </button>
+          <button type="button" onclick="completeKidRegistration()"
+            class="flex-1 bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 hover:from-emerald-500 hover:to-teal-600 text-white font-heading font-black py-3 rounded-2xl shadow-lg transition transform active:scale-98 flex items-center justify-center space-x-2 text-sm sm:text-base border-b-4 border-emerald-700">
+            <span>🚀 Maceraya Başla!</span>
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 3: EXISTING PATIENTS LIST (ESKİ KAYIT LİSTESİ) -->
+      <div id="auth-step-existing" class="hidden flex-1 flex flex-col min-h-0 space-y-3">
+        <!-- Search bar -->
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-amber-500 text-sm"></i>
+          <input type="text" id="existing-search-input" oninput="filterExistingPatients()"
+            placeholder="İsim veya oda no ile ara..."
+            class="w-full pl-10 pr-3 py-2.5 text-xs sm:text-sm bg-slate-50 border-2 border-amber-300 rounded-2xl focus:border-amber-500 focus:bg-white focus:outline-none transition font-bold">
+        </div>
+
+        <!-- Cards container -->
+        <div id="existing-patients-container" class="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+          <!-- Injected via JS -->
+        </div>
+
+        <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+          <button onclick="showChoiceScreen()"
+            class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-heading font-black px-4 py-2.5 rounded-2xl text-xs transition">
+            ← Giriş Seçimi
+          </button>
+          <button onclick="startNewPatientFlow()"
+            class="bg-gradient-to-r from-teal-400 to-emerald-500 text-white font-heading font-black px-4 py-2.5 rounded-2xl text-xs transition flex items-center space-x-1.5 shadow-sm border-b-2 border-teal-700">
+            <i class="fa-solid fa-plus"></i>
+            <span>Yeni Kayıt 🌟</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- AVATAR CHANGE MODAL (ÇOCUK DOKUNDUĞU AN ANINDA MASKOT DEĞİŞİR) -->
+  <div id="avatar-change-modal"
+    class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div
+      class="bg-gradient-to-b from-amber-50 via-white to-teal-50 rounded-[2.5rem] p-5 sm:p-6 max-w-sm sm:max-w-md w-full text-center border-4 border-amber-300 shadow-2xl relative my-auto">
+      <button onclick="closeAvatarChangeModal()"
+        class="absolute top-4 right-4 bg-rose-100 hover:bg-rose-200 text-rose-500 w-8 h-8 rounded-full font-black text-lg flex items-center justify-center transition"
+        title="Kapat">✕</button>
+
+      <div
+        class="w-16 h-16 bg-gradient-to-tr from-amber-300 to-teal-300 text-white rounded-full mx-auto flex items-center justify-center text-4xl mb-2 shadow-lg border-3 border-white ring-2 ring-amber-300">
+        <span id="change-modal-avatar-preview" class="animate-bounce inline-block">🦁</span>
+      </div>
+      <h3 class="text-2xl font-heading font-black text-teal-950 mb-0.5">Yeni Maskotunu Seç! ✨</h3>
+      <p class="text-xs text-teal-800 font-bold mb-3">Değiştirmek istediğin sevimli hayvana dokun:</p>
+
+      <!-- 12 Cute Animal Avatars Grid (Tek Tıkla Doğrudan Değişir) -->
+      <div id="change-avatar-grid"
+        class="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-64 overflow-y-auto p-2.5 bg-white/80 rounded-3xl border-2 border-amber-200 mb-3 shadow-inner">
+        <!-- Injected via JS -->
+      </div>
+
+      <button onclick="closeAvatarChangeModal()"
+        class="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-heading font-black py-2.5 rounded-2xl text-xs sm:text-sm transition">
+        Kapat ve Haritaya Dön 🎈
+      </button>
+    </div>
+  </div>
+
+  <!-- NURSE / STAFF ADMIN PANEL MODAL (LOGOYU ÇİFT TIKLAYINCA AÇILAN GİZLİ PERSONEL PANELİ) -->
+  <div id="nurse-admin-modal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div
+      class="bg-white rounded-3xl p-5 sm:p-6 max-w-2xl w-full text-slate-800 border-4 border-teal-400 shadow-2xl relative max-h-[90vh] flex flex-col">
+      <button onclick="closeNurseAdminModal()"
+        class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center transition">✕</button>
+
+      <!-- Admin Header -->
+      <div class="flex items-center space-x-3 mb-3 shrink-0">
+        <div
+          class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center text-2xl shadow-sm">
+          📁
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h3 class="text-lg font-heading font-bold text-emerald-950">Sağlık Personeli Yönetim Paneli</h3>
+            <span id="csv-sync-badge"
+              class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-300">
+              🟢 kayit.csv Dosyasına Bağlı
+            </span>
+          </div>
+          <p class="text-xs text-gray-500">Tüm hasta kayıtları doğrudan <strong>kayit.csv</strong> dosyasına
+            işlenmektedir.</p>
+        </div>
+      </div>
+
+      <!-- Quick Action Bar -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3 shrink-0">
+        <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-2.5 flex items-center justify-between">
+          <div>
+            <h4 class="font-heading font-bold text-emerald-900 text-xs">Excel / CSV Veritabanı</h4>
+            <p class="text-[10px] text-emerald-800">Hasta listesini .xlsx olarak indir</p>
+          </div>
+          <button onclick="exportPatientsToExcel()"
+            class="bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-bold px-3 py-1.5 rounded-xl text-xs transition flex items-center space-x-1.5 shadow">
+            <i class="fa-solid fa-file-excel"></i>
+            <span>Excel İndir</span>
+          </button>
+        </div>
+
+        <button onclick="openAuthModal(); closeNurseAdminModal();"
+          class="bg-teal-50 hover:bg-teal-100 text-teal-800 font-heading font-bold p-2.5 rounded-2xl border border-teal-200 text-xs transition flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-arrows-rotate text-teal-600"></i>
+          <span>Giriş / Yeni Kayıt Ekranı</span>
+        </button>
+      </div>
+
+      <!-- Patient Management Section -->
+      <div class="flex-1 flex flex-col min-h-0 bg-slate-50 border-2 border-slate-200 rounded-2xl p-3">
+        <div class="flex items-center justify-between mb-2 shrink-0">
+          <div class="flex items-center space-x-2">
+            <h4 class="font-heading font-bold text-slate-800 text-xs sm:text-sm">kayit.csv Dosyasındaki Çocuklar</h4>
+            <span id="nurse-patient-count-badge"
+              class="bg-teal-100 text-teal-800 text-[10px] font-bold px-2 py-0.5 rounded-full">0 Çocuk</span>
+          </div>
+          <!-- Nurse Search -->
+          <div class="relative w-48 sm:w-56">
+            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-gray-400 text-xs"></i>
+            <input type="text" id="nurse-search-input" oninput="filterNursePatients()"
+              placeholder="İsim veya oda ara..."
+              class="w-full pl-7 pr-2 py-1.5 text-xs bg-white border border-slate-300 rounded-xl focus:border-teal-400 focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Nurse Patient Cards / Rows -->
+        <div id="nurse-patients-list-container" class="space-y-2 overflow-y-auto flex-1 pr-1">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between shrink-0">
+        <span class="text-[11px] text-gray-500">💡 Not: Yapılan tüm değişiklikler ve puanlar anında
+          <strong>kayit.csv</strong> dosyasına kaydedilir.</span>
+        <button onclick="closeNurseAdminModal()"
+          class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-heading font-bold px-4 py-1.5 rounded-xl text-xs transition">
+          Kapat
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR / HOŞ GELDİN KARTI MODAL (ÇOCUK KAHRAMAN PASAPORTU) -->
+  <div id="qr-modal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div
+      class="bg-gradient-to-b from-amber-50 via-white to-teal-50 rounded-[2.5rem] p-6 sm:p-7 max-w-sm sm:max-w-md w-full text-center border-4 border-amber-300 shadow-[0_25px_60px_-15px_rgba(20,184,166,0.35)] relative overflow-hidden animate-fadeIn">
+
+      <!-- Arka Plan Sevimli Baloncuklar & Yıldızlar -->
+      <div class="absolute -top-6 -left-6 w-24 h-24 bg-yellow-200/40 rounded-full blur-xl pointer-events-none"></div>
+      <div class="absolute -bottom-6 -right-6 w-28 h-28 bg-teal-200/40 rounded-full blur-xl pointer-events-none"></div>
+      <div class="absolute top-3 left-4 text-lg select-none opacity-60">✨</div>
+      <div class="absolute top-12 right-5 text-lg select-none opacity-60">🌟</div>
+      <div class="absolute bottom-16 left-4 text-lg select-none opacity-60">🎈</div>
+
+      <!-- Kapat Butonu -->
+      <button onclick="toggleQRModal()"
+        class="absolute top-4 right-4 bg-rose-100 hover:bg-rose-200 text-rose-500 w-9 h-9 rounded-full font-black text-lg flex items-center justify-center shadow-sm border border-rose-200 transition-transform transform hover:scale-110 active:scale-95"
+        title="Kapat">✕</button>
+
+      <!-- Üst Şerit Rozet -->
+      <div
+        class="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-orange-400 text-white font-heading font-black text-[11px] uppercase tracking-wider px-3.5 py-1 rounded-full shadow-sm mb-3">
+        <span>🛡️</span> Süper Kahraman Pasaportu <span>✨</span>
+      </div>
+
+      <!-- Maskot / Avatar -->
+      <div class="relative w-20 h-20 mx-auto mb-2">
+        <div id="qr-avatar-badge"
+          class="w-20 h-20 bg-gradient-to-tr from-amber-200 via-yellow-300 to-teal-200 rounded-full flex items-center justify-center text-5xl shadow-lg border-4 border-white ring-4 ring-amber-300 transition-transform transform hover:scale-110 cursor-pointer">
+          🦁
+        </div>
+        <span
+          class="absolute -bottom-1 -right-1 bg-teal-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full border-2 border-white shadow">
+          PRO ⭐
+        </span>
+      </div>
+
+      <!-- Başlık ve Açıklama -->
+      <h3 class="text-2xl font-heading font-black text-teal-950 mb-0.5">Sihirli QR Kartım 🚀</h3>
+      <p class="text-xs font-medium text-teal-700/80 mb-3">Hastane macerandaki gizli kapıları açan dijital kimliğin!</p>
+
+      <!-- Sevimli QR Kod Alanı -->
+      <div
+        class="bg-gradient-to-br from-teal-50 to-emerald-50 border-3 border-dashed border-teal-300 p-4 rounded-3xl mb-3.5 inline-flex flex-col items-center justify-center shadow-inner relative w-full">
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-teal-100 flex items-center justify-center">
+          <i class="fa-solid fa-qrcode text-7xl text-teal-800"></i>
+        </div>
+      </div>
+
+      <!-- Kahraman Bilgileri Kartları -->
+      <div class="grid grid-cols-2 gap-2 text-left mb-4">
+        <!-- Kahraman Adı -->
+        <div class="bg-teal-50/80 border border-teal-200/80 rounded-2xl p-2.5">
+          <span class="text-[10px] uppercase font-bold text-teal-600 block flex items-center gap-1">
+            <span>👤</span> Kahraman
+          </span>
+          <span id="qr-patient-name" class="font-extrabold text-teal-950 text-sm truncate block">Efe Yılmaz</span>
+        </div>
+
+        <!-- Oda Numarası -->
+        <div class="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-2.5">
+          <span class="text-[10px] uppercase font-bold text-amber-600 block flex items-center gap-1">
+            <span>🚪</span> Gizli Üs (Oda)
+          </span>
+          <span id="qr-patient-room" class="font-extrabold text-amber-950 text-sm truncate block">204</span>
+        </div>
+
+        <!-- Servis / Bölüm Bilgisi -->
+        <div class="col-span-2 bg-sky-50/80 border border-sky-200/80 rounded-2xl p-2.5 flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center text-lg shrink-0">
+            🏥
+          </div>
+          <div class="min-w-0">
+            <span class="text-[10px] uppercase font-bold text-sky-600 block">Macera Yeri</span>
+            <span class="font-bold text-sky-950 text-xs truncate block">Çocuk Sağlığı ve Hastalıkları Servisi</span>
+          </div>
+        </div>
+
+        <!-- Kazanılan Puan ve Rütbe -->
+        <div
+          class="col-span-2 bg-gradient-to-r from-emerald-100/90 to-teal-100/90 border border-emerald-300 rounded-2xl p-2.5 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl animate-bounce">⭐</span>
+            <div>
+              <span class="text-[10px] uppercase font-bold text-emerald-700 block">Yıldız Hazinesi & Rütbe</span>
+              <span id="qr-patient-points" class="font-black text-emerald-950 text-xs sm:text-sm">15 Puan (Minik
+                Kaşif)</span>
+            </div>
+          </div>
+          <span class="bg-emerald-500 text-white text-[10px] font-black px-2.5 py-1 rounded-xl shadow-sm">
+            AKTİF 🏆
+          </span>
+        </div>
+      </div>
+
+      <!-- Kapat ve Devam Butonu -->
+      <button onclick="toggleQRModal()"
+        class="w-full bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-500 hover:from-teal-500 hover:to-emerald-500 text-white font-heading font-black py-3 px-6 rounded-2xl shadow-md hover:shadow-lg transform active:scale-95 transition-all text-sm sm:text-base border-b-4 border-teal-600 flex items-center justify-center gap-2">
+        <span>🚀</span> Maceraya Devam Et! <span>✨</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCRIPT FOR SYSTEM LOGIC -->
+  <script>
+    // --- 12 SEVİMLİ HAYVAN AVATARI ---
+    const AVATARS = [
+      { emoji: '🦁', name: 'Cesur Aslan' },
+      { emoji: '🐯', name: 'Güçlü Kaplan' },
+      { emoji: '🦒', name: 'Neşeli Zürafa' },
+      { emoji: '🐘', name: 'Sevimli Fil' },
+      { emoji: '🦢', name: 'Zarif Kuğu' },
+      { emoji: '🐼', name: 'Uykucu Panda' },
+      { emoji: '🐰', name: 'Hızlı Tavşan' },
+      { emoji: '🐻', name: 'Sevimli Ayıcık Tibo' },
+      { emoji: '🐨', name: 'Tatlı Koala' },
+      { emoji: '🦄', name: 'Sihirli Tekboynuz' },
+      { emoji: '🐵', name: 'Oyuncu Maymun' },
+      { emoji: '🦖', name: 'Minik Dino' }
+    ];
+
+    let currentSelectedAvatar = AVATARS[0];
+    let tempNurseData = null;
+
+    // --- RÜTBE VE MOTİVASYON YAPILANDIRMASI ---
+    const ranks = [
+      { min: 0, max: 25, title: 'Meraklı Keşifçi', icon: '🥉', motivation: 'Harika bir başlangıç! Aşağıdaki görevleri tamamlayarak yıldızları topla ve Cesur Çırak rütbesine yüksel! 🚀' },
+      { min: 26, max: 50, title: 'Cesur Çırak', icon: '🥈', motivation: 'Çok cesursun! İlaçlarını ve suyunu içerek Mikrop Bükücü olmaya çok yaklaştın, devam et! 💪' },
+      { min: 51, max: 75, title: 'Mikrop Bükücü', icon: '🥇', motivation: 'Mikroplar senden kaçıyor! Birkaç görev daha tamamla ve Servis Şampiyonu tacını tak! 👑' },
+      { min: 76, max: Infinity, title: 'Servis Şampiyonu', icon: '👑', motivation: 'Tebrikler Minik Kahraman! Tüm servisin en cesur şampiyonu oldun, seninle gurur duyuyoruz! 🎉🌟' }
+    ];
+
+    function getRankForPoints(points) {
+      let current = ranks[0];
+      for (let r of ranks) {
+        if (points >= r.min) current = r;
+      }
+      return current;
+    }
+
+    // --- CSV VERİTABANI YÖNETİMİ (kayit.csv) ---
+    const API_ENDPOINT = '/api/patients';
+    const STORAGE_KEY = 'cbu_pediatric_patients';
+    const ACTIVE_ID_KEY = 'cbu_active_patient_id';
+
+    const INITIAL_SEED_PATIENTS = [
+      {
+        id: 'CBÜ-2026-101',
+        name: 'Efe Yılmaz',
+        room: '204',
+        avatar: '🦁',
+        avatarTitle: 'Cesur Aslan',
+        points: 25,
+        completedTasks: ['task-water', 'task-food'],
+        createdAt: '26.09.2026'
+      },
+      {
+        id: 'CBÜ-2026-102',
+        name: 'Zeynep Kaya',
+        room: '108',
+        avatar: '🦢',
+        avatarTitle: 'Zarif Kuğu',
+        points: 55,
+        completedTasks: ['task-water', 'task-food', 'task-hygiene', 'task-medicine'],
+        createdAt: '26.09.2026'
+      },
+      {
+        id: 'CBÜ-2026-103',
+        name: 'Ali Demir',
+        room: '312',
+        avatar: '🐯',
+        avatarTitle: 'Güçlü Kaplan',
+        points: 10,
+        completedTasks: ['task-hygiene'],
+        createdAt: '26.09.2026'
+      }
+    ];
+
+    let patients = [];
+    let activePatientId = null;
+    let isCsvServerConnected = false;
+
+    async function initPatientData() {
+      // 1. Önce kayit.csv sunucusundan veri çekmeyi dene
+      try {
+        const response = await fetch(API_ENDPOINT, { cache: 'no-store' });
+        if (response.ok) {
+          const csvData = await response.json();
+          if (Array.isArray(csvData) && csvData.length > 0) {
+            patients = csvData;
+            isCsvServerConnected = true;
+          } else if (Array.isArray(csvData)) {
+            patients = [];
+            isCsvServerConnected = true;
+          }
+        }
+      } catch (err) {
+        console.warn('CSV Sunucusuna doğrudan bağlanılamadı, yerel önbellek kontrol ediliyor:', err);
+        isCsvServerConnected = false;
+      }
+
+      // 2. Eğer sunucu kapalıysa yerel depolamadan yükle
+      if (!isCsvServerConnected) {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          try {
+            patients = JSON.parse(stored);
+          } catch (e) {
+            patients = INITIAL_SEED_PATIENTS;
+          }
+        } else {
+          patients = INITIAL_SEED_PATIENTS;
+        }
+      }
+
+      // Aktif hasta belirleme
+      const activeId = localStorage.getItem(ACTIVE_ID_KEY);
+      if (activeId && patients.some(p => p.id === activeId)) {
+        activePatientId = activeId;
+      } else if (patients.length > 0) {
+        activePatientId = patients[0].id;
+        localStorage.setItem(ACTIVE_ID_KEY, activePatientId);
+      } else {
+        activePatientId = null;
+      }
+
+      updateCsvSyncBadge();
+      renderActivePatient();
+
+      // Sisteme ilk girişte direkt karşılama pop-up'ını aç
+      openAuthModal();
+    }
+
+    async function savePatients() {
+      // 1. Her zaman yerel önbelleğe yaz
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(patients));
+
+      // 2. Arka planda anında kayit.csv dosyasına kaydet
+      try {
+        const response = await fetch(API_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(patients)
+        });
+        if (response.ok) {
+          isCsvServerConnected = true;
+        }
+      } catch (e) {
+        console.warn('kayit.csv dosyasına anlık yazılamadı (Sunucu çalıştırılmamış olabilir):', e);
+        isCsvServerConnected = false;
+      }
+
+      updateCsvSyncBadge();
+    }
+
+    function updateCsvSyncBadge() {
+      const badge = document.getElementById('csv-sync-badge');
+      if (!badge) return;
+      if (isCsvServerConnected) {
+        badge.innerText = '🟢 kayit.csv Dosyasına Bağlı (Anlık Kayıt)';
+        badge.className = 'bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-300';
+      } else {
+        badge.innerText = '🟡 Çevrimdışı Mod (baslat.bat ile açınız)';
+        badge.className = 'bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300';
+      }
+    }
+
+    function getActivePatient() {
+      return patients.find(p => p.id === activePatientId) || patients[0];
+    }
+
+    function renderActivePatient() {
+      const current = getActivePatient();
+      if (!current) {
+        const headerAvatar = document.getElementById('header-user-avatar');
+        const headerName = document.getElementById('header-user-name');
+        const headerRoom = document.getElementById('header-user-room');
+        const headerRank = document.getElementById('header-user-rank');
+        const starCountEl = document.getElementById('star-count');
+
+        if (headerAvatar) headerAvatar.innerText = '👋';
+        if (headerName) headerName.innerText = 'Kayıtlı Çocuk Yok';
+        if (headerRoom) headerRoom.innerText = 'Oda -';
+        if (headerRank) headerRank.innerText = 'Giriş / Kayıt Seçiniz';
+        if (starCountEl) starCountEl.innerText = '0';
+        return;
+      }
+
+      const starCount = current.points || 0;
+      const rankInfo = getRankForPoints(starCount);
+
+      // 1. Header Updates (Çocuğun profili)
+      const headerAvatar = document.getElementById('header-user-avatar');
+      const headerName = document.getElementById('header-user-name');
+      const headerRoom = document.getElementById('header-user-room');
+      const headerRank = document.getElementById('header-user-rank');
+      const starCountEl = document.getElementById('star-count');
+
+      if (headerAvatar) headerAvatar.innerText = current.avatar;
+      if (headerName) headerName.innerText = current.name;
+      if (headerRoom) headerRoom.innerText = `Oda ${current.room}`;
+      if (headerRank) headerRank.innerText = `${rankInfo.icon} ${rankInfo.title}`;
+      if (starCountEl) starCountEl.innerText = starCount;
+
+      // 2. Modül 4 Rütbe Alanı
+      const rankDisplay = document.getElementById('current-rank-display');
+      if (rankDisplay) rankDisplay.innerText = `${rankInfo.icon} ${rankInfo.title}`;
+
+      const progressPercent = Math.min(100, Math.round((starCount / 76) * 100));
+      const progressBar = document.getElementById('rank-progress-bar');
+      if (progressBar) progressBar.style.width = progressPercent + '%';
+
+      const progressText = document.getElementById('rank-progress-text');
+      if (progressText) progressText.innerText = `${starCount} / 76+ Puan`;
+
+      const motivationText = document.getElementById('rank-motivation-text');
+      if (motivationText) motivationText.innerText = rankInfo.motivation;
+
+      // 3. Görev Durumları (Bu çocuğa özel tamamlananlar)
+      const completed = current.completedTasks || [];
+      const taskCards = document.querySelectorAll('.task-card');
+      taskCards.forEach(card => {
+        const taskId = card.getAttribute('data-task-id');
+        const badge = card.querySelector('.reward-badge');
+        if (completed.includes(taskId)) {
+          card.style.opacity = '0.7';
+          card.style.pointerEvents = 'none';
+          if (badge) {
+            badge.innerText = 'Tamamlandı! 🎉';
+            badge.className = 'reward-badge bg-gray-300 text-gray-700 text-xs font-bold px-3.5 py-1.5 rounded-xl shadow-inner self-end sm:self-center shrink-0';
+          }
+        } else {
+          card.style.opacity = '1';
+          card.style.pointerEvents = 'auto';
+          if (badge) {
+            let pts = taskId === 'task-food' ? 15 : (taskId === 'task-medicine' ? 20 : 10);
+            badge.innerText = `+${pts} ⭐ Puan`;
+            let color = taskId === 'task-water' ? 'sky' : (taskId === 'task-food' ? 'amber' : (taskId === 'task-hygiene' ? 'emerald' : (taskId === 'task-medicine' ? 'purple' : 'indigo')));
+            badge.className = `reward-badge bg-${color}-500 hover:bg-${color}-600 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow self-end sm:self-center shrink-0 transition`;
+          }
+        }
+      });
+
+      // 3.5 Video Görev Durumu Güncelle
+      checkCurrentVideoStatus();
+
+      // 4. QR Kimlik Kartı
+      const qrAvatar = document.getElementById('qr-avatar-badge');
+      const qrCode = document.getElementById('qr-patient-code');
+      const qrName = document.getElementById('qr-patient-name');
+      const qrRoom = document.getElementById('qr-patient-room');
+      const qrPoints = document.getElementById('qr-patient-points');
+
+      if (qrAvatar) qrAvatar.innerText = current.avatar;
+      if (qrCode) qrCode.innerText = `KOD: ${current.id}`;
+      if (qrName) qrName.innerText = current.name;
+      if (qrRoom) qrRoom.innerText = current.room;
+      if (qrPoints) qrPoints.innerText = `${starCount} Puan (${rankInfo.title})`;
+    }
+
+    // --- ONBOARDING POP-UP CONTROLS ---
+    function openAuthModal() {
+      const modal = document.getElementById('auth-modal');
+      if (modal) modal.classList.remove('hidden');
+      showChoiceScreen();
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById('auth-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function showChoiceScreen() {
+      document.getElementById('auth-step-choice').classList.remove('hidden');
+      document.getElementById('auth-step-nurse').classList.add('hidden');
+      document.getElementById('auth-step-kid').classList.add('hidden');
+      document.getElementById('auth-step-existing').classList.add('hidden');
+
+      document.getElementById('auth-modal-main-title').innerText = 'Kahraman Çocuk Portalı';
+      document.getElementById('auth-modal-sub-title').innerText = 'Manisa Celal Bayar Üniversitesi Çocuk Sağlığı ve Hastalıkları';
+    }
+
+    function startNewPatientFlow() {
+      document.getElementById('auth-step-choice').classList.add('hidden');
+      document.getElementById('auth-step-nurse').classList.remove('hidden');
+      document.getElementById('auth-step-kid').classList.add('hidden');
+      document.getElementById('auth-step-existing').classList.add('hidden');
+
+      // Generate random patient ID in background
+      const randomNum = Math.floor(100 + Math.random() * 900);
+      const newId = `CBÜ-2026-${randomNum}`;
+      const idInput = document.getElementById('nurse-generated-id');
+      if (idInput) idInput.value = newId;
+      document.getElementById('nurse-input-name').value = '';
+      document.getElementById('nurse-input-room').value = '';
+
+      document.getElementById('auth-modal-main-title').innerText = '1. Adım: Hemşire Girişi';
+      document.getElementById('auth-modal-sub-title').innerText = 'Hasta yatış bilgilerini giriniz';
+    }
+
+    function handleNurseStepSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('nurse-input-name').value.trim();
+      const room = document.getElementById('nurse-input-room').value.trim();
+      const idInput = document.getElementById('nurse-generated-id');
+      const id = (idInput && idInput.value ? idInput.value : `CBÜ-2026-${Math.floor(100 + Math.random() * 900)}`).trim();
+
+      if (!name || !room) {
+        alert('Lütfen çocuğun adını ve oda numarasını giriniz.');
+        return;
+      }
+
+      tempNurseData = { id, name, room };
+
+      // Switch to Step 2: Kid Avatar Selection
+      document.getElementById('auth-step-nurse').classList.add('hidden');
+      document.getElementById('auth-step-kid').classList.remove('hidden');
+      document.getElementById('auth-modal-main-title').innerText = `Hoş Geldin, ${name}! 🎉`;
+      document.getElementById('auth-modal-sub-title').innerText = 'Şimdi süper kahraman maskotunu seç';
+
+      renderKidAvatarPicker();
+    }
+
+    function backToNurseStep() {
+      document.getElementById('auth-step-kid').classList.add('hidden');
+      document.getElementById('auth-step-nurse').classList.remove('hidden');
+      document.getElementById('auth-modal-main-title').innerText = '1. Adım: Hemşire Girişi';
+    }
+
+    function renderKidAvatarPicker() {
+      const heroIcon = document.getElementById('kid-selected-avatar-hero-icon');
+      if (heroIcon) heroIcon.innerText = currentSelectedAvatar.emoji;
+
+      const label = document.getElementById('kid-selected-avatar-title');
+      if (label) label.innerText = `${currentSelectedAvatar.emoji} ${currentSelectedAvatar.name}`;
+
+      const grid = document.getElementById('kid-avatar-picker-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      AVATARS.forEach(av => {
+        const isSelected = currentSelectedAvatar.emoji === av.emoji;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `flex flex-col items-center justify-center p-2 rounded-2xl transition border-3 transform active:scale-95 ${isSelected
+          ? 'bg-amber-100 border-amber-400 scale-105 shadow-md ring-3 ring-amber-300'
+          : 'bg-white/90 border-teal-200 hover:border-amber-300 hover:bg-amber-50 shadow-xs hover:scale-105'
+          }`;
+        btn.innerHTML = `
+          <span class="text-3xl filter drop-shadow">${av.emoji}</span>
+          <span class="text-[10px] font-black text-teal-950 mt-1 truncate w-full text-center">${av.name.split(' ')[1] || av.name}</span>
+        `;
+        btn.onclick = () => {
+          currentSelectedAvatar = av;
+          const topIcon = document.getElementById('kid-selected-avatar-hero-icon');
+          if (topIcon) {
+            topIcon.innerText = av.emoji;
+            topIcon.classList.remove('animate-bounce');
+            void topIcon.offsetWidth; // Reflow for replay
+            topIcon.classList.add('animate-bounce');
+          }
+          const lbl = document.getElementById('kid-selected-avatar-title');
+          if (lbl) lbl.innerText = `${av.emoji} ${av.name}`;
+          renderKidAvatarPicker();
+        };
+        grid.appendChild(btn);
+      });
+    }
+
+    function completeKidRegistration() {
+      if (!tempNurseData) {
+        showChoiceScreen();
+        return;
+      }
+
+      const newPatient = {
+        id: tempNurseData.id,
+        name: tempNurseData.name,
+        room: tempNurseData.room,
+        avatar: currentSelectedAvatar.emoji,
+        avatarTitle: currentSelectedAvatar.name,
+        points: 0,
+        completedTasks: [],
+        createdAt: new Date().toLocaleDateString('tr-TR')
+      };
+
+      patients.unshift(newPatient);
+      activePatientId = newPatient.id;
+      localStorage.setItem(ACTIVE_ID_KEY, activePatientId);
+      savePatients();
+
+      renderActivePatient();
+      closeAuthModal();
+
+      alert(`🎉 Hoş Geldin Minik Kahraman ${newPatient.name}! ${newPatient.avatar} ${newPatient.avatarTitle} maskotunla iyileşme maceran başlıyor! 🚀`);
+    }
+
+    function showExistingPatientsList() {
+      document.getElementById('auth-step-choice').classList.add('hidden');
+      document.getElementById('auth-step-nurse').classList.add('hidden');
+      document.getElementById('auth-step-kid').classList.add('hidden');
+      document.getElementById('auth-step-existing').classList.remove('hidden');
+
+      document.getElementById('auth-modal-main-title').innerText = 'Kayıtlı Kahramanlar 🌟';
+      document.getElementById('auth-modal-sub-title').innerText = 'Devam etmek için kendi profilini seç';
+
+      renderExistingPatientsList();
+    }
+
+    function renderExistingPatientsList(filtered = null) {
+      const container = document.getElementById('existing-patients-container');
+      if (!container) return;
+
+      const list = filtered !== null ? filtered : patients;
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 text-gray-400 bg-amber-50/50 rounded-3xl border-2 border-dashed border-amber-200">
+            <span class="text-4xl block mb-2">🧸</span>
+            <p class="text-xs font-black text-amber-900">Kayıtlı minik kahraman bulunamadı.</p>
+            <p class="text-[11px] text-teal-700 font-bold mt-0.5">Yeni kayıt oluşturarak maceraya başla!</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(p => {
+        const isActive = p.id === activePatientId;
+        const rankInfo = getRankForPoints(p.points || 0);
+        return `
+          <div onclick="selectExistingPatient('${p.id}')"
+            class="flex items-center justify-between p-3 rounded-2xl border-3 transition cursor-pointer hover:scale-102 ${isActive
+            ? 'bg-gradient-to-r from-teal-50 via-amber-50 to-emerald-50 border-teal-400 shadow-md ring-2 ring-teal-300'
+            : 'bg-white hover:bg-amber-50/70 border-amber-200 shadow-xs'
+          }">
+            <div class="flex items-center space-x-3">
+              <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-200 to-yellow-300 border-2 border-white ring-2 ring-amber-300 flex items-center justify-center text-3xl shrink-0 shadow-sm">
+                ${p.avatar}
+              </div>
+              <div class="text-left">
+                <div class="flex items-center space-x-2">
+                  <h4 class="font-heading font-black text-teal-950 text-sm sm:text-base">${p.name}</h4>
+                  <span class="bg-amber-200 text-amber-900 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-300">🚪 Oda ${p.room}</span>
+                  ${isActive ? '<span class="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-2xs">Aktif ⭐</span>' : ''}
+                </div>
+                <div class="flex items-center space-x-2 text-[11px] text-gray-600 mt-0.5 font-bold">
+                  <span class="text-amber-800 font-black">⭐ ${p.points || 0} Puan</span>
+                  <span>•</span>
+                  <span class="text-teal-800 font-extrabold">${rankInfo.icon} ${rankInfo.title}</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-1.5 shrink-0 ml-2">
+              <button onclick="event.stopPropagation(); selectExistingPatient('${p.id}')" title="Bu Profili Aç"
+                class="bg-gradient-to-r from-teal-400 to-emerald-500 hover:from-teal-500 hover:to-emerald-600 text-white text-xs font-heading font-black px-3 py-1.5 rounded-xl transition shadow-sm border-b-2 border-teal-700">
+                Giriş 🚀
+              </button>
+              <button onclick="event.stopPropagation(); deletePatient('${p.id}')" title="Kaydı Sil"
+                class="bg-rose-100 hover:bg-rose-200 text-rose-600 hover:text-rose-700 text-xs px-2.5 py-1.5 rounded-xl transition border border-rose-200 flex items-center space-x-1 shadow-xs">
+                <i class="fa-solid fa-trash-can"></i>
+                <span class="hidden sm:inline font-black">Sil</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function deletePatient(id) {
+      const patient = patients.find(p => p.id === id);
+      const pName = patient ? patient.name : 'Bu hasta';
+      const pRoom = patient ? patient.room : '';
+
+      if (!confirm(`⚠️ "${pName}" (Oda: ${pRoom}) adlı minik kahramanın kaydını silmek istediğinize emin misiniz?`)) {
+        return;
+      }
+
+      patients = patients.filter(p => p.id !== id);
+      if (activePatientId === id) {
+        activePatientId = patients.length > 0 ? patients[0].id : null;
+        if (activePatientId) localStorage.setItem(ACTIVE_ID_KEY, activePatientId);
+        else localStorage.removeItem(ACTIVE_ID_KEY);
+      }
+      savePatients();
+      renderActivePatient();
+      filterExistingPatients();
+      if (typeof renderNursePatientsTable === 'function') {
+        filterNursePatients();
+      }
+    }
+
+    function filterExistingPatients() {
+      const input = document.getElementById('existing-search-input');
+      const query = (input ? input.value : '').toLowerCase().trim();
+      if (!query) {
+        renderExistingPatientsList();
+        return;
+      }
+      const filtered = patients.filter(p =>
+        (p.name && p.name.toLowerCase().includes(query)) ||
+        (p.room && p.room.toLowerCase().includes(query)) ||
+        (p.id && p.id.toLowerCase().includes(query))
+      );
+      renderExistingPatientsList(filtered);
+    }
+
+    function selectExistingPatient(id) {
+      activePatientId = id;
+      localStorage.setItem(ACTIVE_ID_KEY, id);
+      renderActivePatient();
+      closeAuthModal();
+    }
+
+    // --- AVATAR DEĞİŞTİRME MODALI (ÇOCUK KENDİ AVATARINA TIKLAYINCA) ---
+    function openAvatarChangeModal() {
+      const modal = document.getElementById('avatar-change-modal');
+      const current = getActivePatient();
+      if (current) {
+        currentSelectedAvatar = AVATARS.find(a => a.emoji === current.avatar) || AVATARS[0];
+      }
+      const preview = document.getElementById('change-modal-avatar-preview');
+      if (preview) preview.innerText = currentSelectedAvatar.emoji;
+      renderChangeAvatarGrid();
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeAvatarChangeModal() {
+      const modal = document.getElementById('avatar-change-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function renderChangeAvatarGrid() {
+      const grid = document.getElementById('change-avatar-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      AVATARS.forEach(av => {
+        const isSelected = currentSelectedAvatar.emoji === av.emoji;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `flex flex-col items-center justify-center p-2.5 rounded-2xl transition border-3 transform active:scale-95 cursor-pointer hover:scale-105 ${isSelected
+          ? 'bg-amber-100 border-amber-400 scale-105 shadow-md ring-3 ring-amber-300'
+          : 'bg-white border-amber-200 hover:border-amber-400 hover:bg-amber-50 shadow-xs'
+          }`;
+        btn.innerHTML = `
+          <span class="text-3xl sm:text-4xl filter drop-shadow mb-1">${av.emoji}</span>
+          <span class="text-[10px] sm:text-[11px] font-black text-teal-950 truncate w-full text-center">${av.name}</span>
+        `;
+        btn.onclick = () => {
+          const preview = document.getElementById('change-modal-avatar-preview');
+          if (preview) {
+            preview.innerText = av.emoji;
+            preview.classList.remove('animate-bounce');
+            void preview.offsetWidth;
+            preview.classList.add('animate-bounce');
+          }
+          selectNewAvatarDirectly(av);
+        };
+        grid.appendChild(btn);
+      });
+    }
+
+    function selectNewAvatarDirectly(av) {
+      const current = getActivePatient();
+      if (current) {
+        current.avatar = av.emoji;
+        current.avatarTitle = av.name;
+        currentSelectedAvatar = av;
+        savePatients();
+        renderActivePatient();
+      }
+      closeAvatarChangeModal();
+    }
+
+    // --- LOGO TIKLAMASI (GİZLİ HEMŞİRE / PERSONEL ERİŞİMİ) ---
+    let logoClickCount = 0;
+    let logoClickTimer = null;
+    function handleLogoNurseClick() {
+      logoClickCount++;
+      clearTimeout(logoClickTimer);
+      logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 1200);
+
+      // 2 kez logoya tıklandığında personel paneli açılır
+      if (logoClickCount >= 2) {
+        logoClickCount = 0;
+        openNurseAdminModal();
+      }
+    }
+
+    function openNurseAdminModal() {
+      const modal = document.getElementById('nurse-admin-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        renderNursePatientsTable();
+      }
+    }
+
+    function closeNurseAdminModal() {
+      const modal = document.getElementById('nurse-admin-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function renderNursePatientsTable(filtered = null) {
+      const container = document.getElementById('nurse-patients-list-container');
+      const countBadge = document.getElementById('nurse-patient-count-badge');
+      if (!container) return;
+
+      const list = filtered !== null ? filtered : patients;
+      if (countBadge) countBadge.innerText = `${patients.length} Çocuk`;
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 text-gray-400">
+            <i class="fa-solid fa-user-slash text-2xl mb-1"></i>
+            <p class="text-xs">Kayıtlı hasta bulunamadı.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(p => {
+        const isActive = p.id === activePatientId;
+        const rankInfo = getRankForPoints(p.points || 0);
+        return `
+          <div class="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-xl hover:border-teal-300 transition text-xs">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-9 h-9 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-xl shrink-0">
+                ${p.avatar}
+              </div>
+              <div>
+                <div class="flex items-center space-x-1.5">
+                  <span class="font-bold text-slate-800">${p.name}</span>
+                  <span class="bg-teal-100 text-teal-800 font-bold px-1.5 py-0.2 rounded text-[10px]">Oda ${p.room}</span>
+                  ${isActive ? '<span class="bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded text-[10px]">Aktif</span>' : ''}
+                </div>
+                <div class="text-[10px] text-gray-500 flex items-center space-x-1.5 mt-0.5">
+                  <span class="font-mono text-slate-600">${p.id}</span>
+                  <span>•</span>
+                  <span class="font-bold text-amber-600">⭐ ${p.points || 0} Puan</span>
+                  <span>•</span>
+                  <span>${rankInfo.icon} ${rankInfo.title}</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-1.5 shrink-0">
+              <button onclick="selectExistingPatient('${p.id}'); closeNurseAdminModal();"
+                class="bg-teal-50 hover:bg-teal-100 text-teal-700 font-bold px-2.5 py-1 rounded-lg text-[11px] transition">
+                Seç
+              </button>
+              <button onclick="deletePatient('${p.id}')" title="Bu kaydı sil"
+                class="bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 font-bold px-2.5 py-1 rounded-lg text-[11px] transition border border-rose-200 flex items-center space-x-1">
+                <i class="fa-solid fa-trash-can"></i>
+                <span class="hidden sm:inline">Sil</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterNursePatients() {
+      const input = document.getElementById('nurse-search-input');
+      const query = (input ? input.value : '').toLowerCase().trim();
+      if (!query) {
+        renderNursePatientsTable();
+        return;
+      }
+      const filtered = patients.filter(p =>
+        (p.name && p.name.toLowerCase().includes(query)) ||
+        (p.room && p.room.toLowerCase().includes(query)) ||
+        (p.id && p.id.toLowerCase().includes(query))
+      );
+      renderNursePatientsTable(filtered);
+    }
+
+    // --- EXCEL (.XLSX) DIŞA AKTARMA MOTORU ---
+    function exportPatientsToExcel() {
+      if (!patients || patients.length === 0) {
+        alert('İndirilecek kayıtlı hasta bulunamadı.');
+        return;
+      }
+
+      if (typeof XLSX === 'undefined') {
+        alert('Excel kütüphanesi yükleniyor, lütfen birkaç saniye sonra tekrar deneyin.');
+        return;
+      }
+
+      const excelData = patients.map((p, index) => {
+        let rankInfo = getRankForPoints(p.points || 0);
+        return {
+          "Sıra No": index + 1,
+          "Özel Hasta ID": p.id || '',
+          "Adı Soyadı": p.name || '',
+          "Oda Numarası": p.room || '',
+          "Seçilen Avatar": `${p.avatar} ${p.avatarTitle || ''}`,
+          "Toplam Yıldız Puanı": p.points || 0,
+          "Mevcut Rütbe": `${rankInfo.icon} ${rankInfo.title}`,
+          "Tamamlanan Görev Sayısı": `${(p.completedTasks || []).length} / 5`,
+          "Kayıt Tarihi": p.createdAt || new Date().toLocaleDateString('tr-TR')
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      worksheet['!cols'] = [
+        { wch: 8 },  // Sıra No
+        { wch: 16 }, // ID
+        { wch: 22 }, // İsim
+        { wch: 14 }, // Oda No
+        { wch: 20 }, // Avatar
+        { wch: 18 }, // Puan
+        { wch: 22 }, // Rütbe
+        { wch: 24 }, // Görevler
+        { wch: 14 }  // Tarih
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Hasta_Listesi");
+      XLSX.writeFile(workbook, "CBU_Cocuk_Servisi_Hasta_Listesi.xlsx");
+    }
+
+    // --- GÖREV ÖDÜL KAZANIMI (AKTİF ÇOCUĞA ÖZEL) ---
+    function claimReward(taskId, points) {
+      const active = getActivePatient();
+      if (!active) return;
+
+      if (!active.completedTasks) active.completedTasks = [];
+      if (active.completedTasks.includes(taskId)) return;
+
+      active.completedTasks.push(taskId);
+      active.points = (active.points || 0) + points;
+      savePatients();
+      renderActivePatient();
+    }
+
+    // --- MODÜL AÇMA / KAPAMA ---
+    function openModule(moduleId) {
+      const mainGrid = document.getElementById('main-modules-grid');
+      if (mainGrid) mainGrid.classList.add('hidden');
+
+      document.getElementById('video-module').classList.add('hidden');
+      document.getElementById('tools-module').classList.add('hidden');
+      document.getElementById('team-module').classList.add('hidden');
+      document.getElementById('tips-module').classList.add('hidden');
+
+      const displayArea = document.getElementById('content-display-area');
+      const target = document.getElementById(moduleId);
+      if (displayArea && target) {
+        displayArea.classList.remove('hidden');
+        target.classList.remove('hidden');
+        if (moduleId === 'video-module') {
+          initOrAttachYoutubePlayer();
+          checkCurrentVideoStatus();
+        }
+        displayArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function closeModule() {
+      if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
+        try { ytPlayer.pauseVideo(); } catch (e) { }
+      }
+
+      const displayArea = document.getElementById('content-display-area');
+      if (displayArea) displayArea.classList.add('hidden');
+
+      document.getElementById('video-module').classList.add('hidden');
+      document.getElementById('tools-module').classList.add('hidden');
+      document.getElementById('team-module').classList.add('hidden');
+      document.getElementById('tips-module').classList.add('hidden');
+
+      const mainGrid = document.getElementById('main-modules-grid');
+      if (mainGrid) {
+        mainGrid.classList.remove('hidden');
+        mainGrid.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    function showToolDetail(toolKey) {
+      const detailBox = document.getElementById('tool-detail-box');
+      const icon = document.getElementById('tool-icon');
+      const title = document.getElementById('tool-title');
+      const desc = document.getElementById('tool-desc');
+
+      const toolsData = {
+        'tansiyon': {
+          icon: '🩹',
+          title: 'Tansiyon Aleti',
+          desc: 'Bu alet kolunu yumuşacık bir kumaşla sarar ve sana güç kucaklaması yapar! Kalbinin ne kadar güçlü attığını ölçer. Hiç canın acımaz.'
+        },
+        'steteskop': {
+          icon: '🎧',
+          title: 'Steteskop',
+          desc: 'Doktorunun veya hemşirenin kulağına taktığı sihirli kulaklıktır. Tobi ile kalbinin şarkısını dinler!'
+        },
+        'serum': {
+          icon: '💧',
+          title: 'Sihirli Su (Serum)',
+          desc: 'Vücuduna ihtiyacı olan suyu ve enerjiyi doğrudan verir. Çabucak ayağa kalkıp oynaman için sana güç katar.'
+        },
+        'enjektor': {
+          icon: '💉',
+          title: 'Enjektör',
+          desc: 'Mini süper iğne! Vücuduna giren mikropları anında kovalayan hızlı bir kurtarıcı.'
+        },
+        'pulsoksimetre': {
+          icon: '🐤',
+          title: 'Pulsoksimetre (Işıklı Parmak Klipsi)',
+          desc: 'Parmağındaki minik kırmızı ışık! Vücudundaki oksijen miktarını ölçer.'
+        },
+        'atesolcer': {
+          icon: '🌡️',
+          title: 'Ateşölçer',
+          desc: 'Sihirli ışınlı cihaz! Vücudunun ne kadar sıcak veya serin olduğunu saniyeler içinde söyler.'
+        }
+      };
+
+      if (toolsData[toolKey]) {
+        icon.innerText = toolsData[toolKey].icon;
+        title.innerText = toolsData[toolKey].title;
+        desc.innerText = toolsData[toolKey].desc;
+        detailBox.classList.remove('hidden');
+      }
+    }
+
+    function toggleQRModal() {
+      const modal = document.getElementById('qr-modal');
+      modal.classList.toggle('hidden');
+    }
+
+    // --- YOUTUBE IFRAME API & %95 OTOMATİK İZLEME TAKİBİ (İLERİ/GERİ SARMA ENGELLİ) ---
+    let ytPlayer = null;
+    let ytProgressInterval = null;
+    let maxTimeReached = 0;
+
+    function onYouTubeIframeAPIReady() {
+      initOrAttachYoutubePlayer();
+    }
+
+    function initOrAttachYoutubePlayer() {
+      if (ytPlayer || typeof YT === 'undefined' || !YT.Player) return;
+      const iframeEl = document.getElementById('youtube-player');
+      if (!iframeEl) return;
+
+      try {
+        ytPlayer = new YT.Player('youtube-player', {
+          events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+          }
+        });
+      } catch (err) {
+        console.warn('YouTube Player başlatma:', err);
+      }
+    }
+
+    function onPlayerReady(event) {
+      try {
+        ytPlayer.unMute();
+        ytPlayer.setVolume(100);
+      } catch (err) { }
+      updateSoundButtonUI(false);
+      checkCurrentVideoStatus();
+    }
+
+    function onPlayerStateChange(event) {
+      const centerOverlay = document.getElementById('video-center-play-overlay');
+      const centerIcon = document.getElementById('center-icon-symbol');
+
+      if (typeof YT !== 'undefined' && event.data === YT.PlayerState.PLAYING) {
+        if (centerOverlay) {
+          centerOverlay.classList.add('opacity-0', 'scale-75');
+          centerOverlay.classList.remove('opacity-100', 'scale-100');
+        }
+        if (centerIcon) centerIcon.className = 'fa-solid fa-pause';
+
+        try {
+          if (ytPlayer.isMuted()) {
+            ytPlayer.unMute();
+            ytPlayer.setVolume(100);
+          }
+        } catch (e) { }
+        updateSoundButtonUI(ytPlayer ? ytPlayer.isMuted() : false);
+        startVideoTracking();
+      } else {
+        if (centerOverlay) {
+          centerOverlay.classList.remove('opacity-0', 'scale-75');
+          centerOverlay.classList.add('opacity-100', 'scale-100');
+        }
+        if (centerIcon) centerIcon.className = 'fa-solid fa-play ml-1';
+
+        stopVideoTracking();
+        if (typeof YT !== 'undefined' && event.data === YT.PlayerState.ENDED) {
+          checkVideoProgress(true);
+        }
+      }
+    }
+
+    function togglePlayPauseVideo() {
+      if (!ytPlayer) return;
+      try {
+        const state = typeof ytPlayer.getPlayerState === 'function' ? ytPlayer.getPlayerState() : -1;
+        if (state === YT.PlayerState.PLAYING) {
+          ytPlayer.pauseVideo();
+        } else {
+          ytPlayer.playVideo();
+        }
+      } catch (e) {
+        console.warn('Video oynatma hatası:', e);
+      }
+    }
+
+    function toggleMuteVideo() {
+      if (!ytPlayer) return;
+      try {
+        const isMuted = ytPlayer.isMuted ? ytPlayer.isMuted() : false;
+        if (isMuted) {
+          ytPlayer.unMute();
+          const currentVol = (typeof ytPlayer.getVolume === 'function') ? ytPlayer.getVolume() : 100;
+          const targetVol = currentVol > 0 ? currentVol : 100;
+          ytPlayer.setVolume(targetVol);
+          updateSoundButtonUI(false, targetVol);
+        } else {
+          ytPlayer.mute();
+          updateSoundButtonUI(true, 0);
+        }
+      } catch (e) {
+        console.warn('Ses değiştirme hatası:', e);
+      }
+    }
+
+    function changeVolume(delta) {
+      if (!ytPlayer || typeof ytPlayer.getVolume !== 'function') return;
+      try {
+        let currentVol = ytPlayer.getVolume();
+        let newVol = Math.max(0, Math.min(100, currentVol + delta));
+
+        if (newVol > 0 && ytPlayer.isMuted && ytPlayer.isMuted()) {
+          ytPlayer.unMute();
+        }
+
+        ytPlayer.setVolume(newVol);
+        updateSoundButtonUI(newVol === 0 || (ytPlayer.isMuted && ytPlayer.isMuted()), newVol);
+      } catch (e) {
+        console.warn('Ses seviyesi değiştirilemedi:', e);
+      }
+    }
+
+    function updateSoundButtonUI(isMuted, vol = null) {
+      const icon = document.getElementById('sound-btn-icon');
+      const badge = document.getElementById('sound-level-badge');
+      if (!icon) return;
+
+      let currentVolume = vol !== null ? vol : (ytPlayer && typeof ytPlayer.getVolume === 'function' ? ytPlayer.getVolume() : 100);
+
+      if (badge) {
+        badge.innerText = isMuted ? '0%' : `${currentVolume}%`;
+      }
+
+      if (isMuted || currentVolume === 0) {
+        icon.className = 'fa-solid fa-volume-xmark text-rose-400 text-sm';
+      } else if (currentVolume < 50) {
+        icon.className = 'fa-solid fa-volume-low text-amber-300 text-sm';
+      } else {
+        icon.className = 'fa-solid fa-volume-high text-emerald-300 text-sm';
+      }
+    }
+
+    function startVideoTracking() {
+      stopVideoTracking();
+      ytProgressInterval = setInterval(() => {
+        checkVideoProgress(false);
+      }, 400);
+    }
+
+    function stopVideoTracking() {
+      if (ytProgressInterval) {
+        clearInterval(ytProgressInterval);
+        ytProgressInterval = null;
+      }
+    }
+
+    function checkVideoProgress(forceEnded = false) {
+      if (!ytPlayer || typeof ytPlayer.getCurrentTime !== 'function' || typeof ytPlayer.getDuration !== 'function') return;
+
+      const current = ytPlayer.getCurrentTime();
+      const duration = ytPlayer.getDuration();
+
+      // İLERİ SARMA ENGELİ: Eğer kullanıcı/klavye ile ileri atlama yapılırsa, izlenen en son güvenli saniyeye geri al
+      if (current > maxTimeReached + 2) {
+        ytPlayer.seekTo(maxTimeReached, true);
+        return;
+      }
+
+      if (current > maxTimeReached) {
+        maxTimeReached = current;
+      }
+
+      let percent = 0;
+      if (forceEnded) {
+        percent = 100;
+      } else if (duration > 0) {
+        percent = Math.min(100, Math.round((maxTimeReached / duration) * 100));
+      }
+
+      updateVideoProgressUI(percent);
+
+      if (percent >= 95) {
+        triggerAutomaticVideoReward();
+      }
+    }
+
+    function updateVideoProgressUI(percent) {
+      const active = getActivePatient();
+      const isAlreadyCompleted = active && active.completedTasks && active.completedTasks.includes('task-video');
+
+      const badge = document.getElementById('video-progress-percent-badge');
+      const bar = document.getElementById('video-live-progress-bar');
+      const desc = document.getElementById('video-progress-status-desc');
+      const pill = document.getElementById('video-reward-status-pill');
+
+      if (isAlreadyCompleted) {
+        if (badge) {
+          badge.innerText = '%100 Tamamlandı';
+          badge.className = 'bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full';
+        }
+        if (bar) bar.style.width = '100%';
+        if (desc) desc.innerText = '🎉 Harika! Tanıtım videosunun tamamını izledin ve +15 ⭐ yıldız puanını kazandın!';
+        if (pill) {
+          pill.innerHTML = `
+            <span class="bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow flex items-center gap-1.5">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Kazanıldı 🎉 (+15 ⭐)</span>
+            </span>
+          `;
+        }
+        return;
+      }
+
+      if (badge) badge.innerText = `%${percent}`;
+      if (bar) bar.style.width = `${percent}%`;
+
+      if (percent >= 95) {
+        if (desc) desc.innerText = '🎉 Tebrikler! %95 izleme hedefine ulaştın! +15 ⭐ Puanın tanımlandı!';
+        if (pill) {
+          pill.innerHTML = `
+            <span class="bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow flex items-center gap-1.5 animate-bounce">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Kazanıldı 🎉 (+15 ⭐)</span>
+            </span>
+          `;
+        }
+      } else {
+        if (desc) desc.innerText = `Puan kazanmak için en az %95 oranında izlenmeli (Şu an %${percent})`;
+        if (pill) {
+          pill.innerHTML = `
+            <span class="bg-amber-100 text-amber-900 text-xs font-bold px-3 py-1.5 rounded-xl border border-amber-300 flex items-center gap-1">
+              <i class="fa-solid fa-lock text-amber-600"></i>
+              <span>+15 ⭐ (%${percent}/%95)</span>
+            </span>
+          `;
+        }
+      }
+    }
+
+    function triggerAutomaticVideoReward() {
+      const active = getActivePatient();
+      if (!active) return;
+      if (!active.completedTasks) active.completedTasks = [];
+
+      if (!active.completedTasks.includes('task-video')) {
+        active.completedTasks.push('task-video');
+        active.points = (active.points || 0) + 15;
+        savePatients();
+        renderActivePatient();
+        updateVideoProgressUI(95);
+
+        alert('🎉 TEBRİKLER MİNİK KAHRAMAN! 🎉\n\n🎬 Servis tanıtım videosunun %95\'ini dikkatle izledin ve +15 ⭐ Yıldız Puanını hak ettin!\n\nPuanın anında kaydedildi. 🚀');
+      }
+    }
+
+    function checkCurrentVideoStatus() {
+      const active = getActivePatient();
+      const isAlreadyCompleted = active && active.completedTasks && active.completedTasks.includes('task-video');
+      updateVideoProgressUI(isAlreadyCompleted ? 100 : 0);
+    }
+
+    // --- SAYFA AÇILDIĞINDA OTOMATİK BAŞLAT ---
+    document.addEventListener('DOMContentLoaded', () => {
+      initPatientData();
+    });
+  </script>
+</body>
+
+</html>
