@@ -2,17 +2,46 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=Kid_inferance.html">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CBÜ Çocuk Oryantasyon Portalı</title>
   <script>
-    // URL parametrelerini (örnek ?id=CBÜ-2026-828) koruyarak yönlendir
+    // URL parametrelerini (?id=... gibi QR parametreleri dahil) koruyarak yönlendir
     const search = window.location.search || '';
     const hash = window.location.hash || '';
     window.location.replace('Kid_inferance.html' + search + hash);
   </script>
-  <title>Yönlendiriliyor...</title>
+  <meta http-equiv="refresh" content="0; url=Kid_inferance.html">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #f0fdf4, #ccfbf1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .loader {
+      text-align: center;
+      color: #0f766e;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 5px solid #ccfbf1;
+      border-top-color: #0d9488;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
-<body style="font-family: sans-serif; text-align: center; padding-top: 50px; background: #f0fdf4;">
-  <h2>🏥 CBÜ Çocuk Oryantasyon Portalı Açılıyor...</h2>
-  <p>Lütfen bekleyiniz, yönlendiriliyorsunuz...</p>
+<body>
+  <div class="loader">
+    <div class="spinner"></div>
+    <h2>🏥 CBÜ Çocuk Portalı Açılıyor...</h2>
+    <p style="font-size:14px; color:#115e59;">Lütfen bekleyiniz, yönlendiriliyorsunuz...</p>
+  </div>
 </body>
 </html>

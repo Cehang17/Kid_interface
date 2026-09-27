@@ -1543,51 +1543,31 @@
       return current;
     }
 
-    // --- CSV VERİTABANI YÖNETİMİ (kayit.csv) ---
-    const API_ENDPOINT = '/api/patients';
+    // --- VERİ YÖNETİMİ (localStorage tabanlı - Netlify uyumlu) ---
     const STORAGE_KEY = 'cbu_pediatric_patients';
     const ACTIVE_ID_KEY = 'cbu_active_patient_id';
 
     let patients = [];
     let activePatientId = null;
-    let isCsvServerConnected = false;
     let isNurseLoggedIn = sessionStorage.getItem('cbu_nurse_session') === 'true';
     let pendingNurseAction = null;
 
-    async function initPatientData() {
+    function initPatientData() {
       // URL parametre kontrolü (Telefondan QR okutulup okutulmadığı)
       const urlParams = new URLSearchParams(window.location.search);
       const targetParamId = urlParams.get('id') || urlParams.get('patient') || urlParams.get('hasta');
 
-      // 1. Önce kayit.csv sunucusundan veri çekmeyi dene
-      try {
-        const response = await fetch(API_ENDPOINT, { cache: 'no-store' });
-        if (response.ok) {
-          const csvData = await response.json();
-          if (Array.isArray(csvData)) {
-            patients = csvData;
-            isCsvServerConnected = true;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(patients));
-          }
-        }
-      } catch (err) {
-        console.warn('CSV Sunucusuna bağlanılamadı, yerel önbellek kontrol ediliyor:', err);
-        isCsvServerConnected = false;
-      }
-
-      // 2. Eğer sunucu kapalıysa yerel depolamadan yükle
-      if (!isCsvServerConnected) {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored);
-            patients = Array.isArray(parsed) ? parsed : [];
-          } catch (e) {
-            patients = [];
-          }
-        } else {
+      // Verileri localStorage'dan yükle (Netlify'da sunucu olmadığı için)
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          patients = Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
           patients = [];
         }
+      } else {
+        patients = [];
       }
 
       // Aktif hasta belirleme
@@ -1601,7 +1581,6 @@
         if (targetPatient) {
           activePatientId = targetPatient.id;
           localStorage.setItem(ACTIVE_ID_KEY, activePatientId);
-          updateCsvSyncBadge();
           renderActivePatient();
           updateNurseModeUI();
           closeAuthModal();
@@ -1621,7 +1600,6 @@
         activePatientId = null;
       }
 
-      updateCsvSyncBadge();
       renderActivePatient();
       updateNurseModeUI();
 
@@ -1633,38 +1611,13 @@
       }
     }
 
-    async function savePatients() {
-      // 1. Her zaman yerel önbelleğe yaz
+    function savePatients() {
+      // Verileri localStorage'a kaydet (Netlify'da tek kalıcı depolama)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(patients));
-
-      // 2. Arka planda anında kayit.xlsx ve kayit.csv dosyalarına kaydet
-      try {
-        const response = await fetch(API_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(patients)
-        });
-        if (response.ok) {
-          isCsvServerConnected = true;
-        }
-      } catch (e) {
-        console.warn('Excel / CSV dosyasına anlık yazılamadı (Sunucu çalıştırılmamış olabilir):', e);
-        isCsvServerConnected = false;
-      }
-
-      updateCsvSyncBadge();
     }
 
     function updateCsvSyncBadge() {
-      const badge = document.getElementById('csv-sync-badge');
-      if (!badge) return;
-      if (isCsvServerConnected) {
-        badge.innerText = '🟢 kayit.csv Anlık Kayıt Aktif';
-        badge.className = 'bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-300';
-      } else {
-        badge.innerText = '🟡 Çevrimdışı Mod (baslat.bat ile açınız)';
-        badge.className = 'bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300';
-      }
+      // Bu fonksiyon Netlify'da uyumluluk için boş bırakıldı
     }
 
     function getActivePatient() {

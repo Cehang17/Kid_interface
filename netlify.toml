@@ -1,6 +1,8 @@
 [build]
   publish = "."
 
+# Tüm sayfaları Kid_inferance.html'e yönlendir (SPA modu)
+# QR linklerindeki ?id=... query parametreleri otomatik korunur
 [[redirects]]
   from = "/"
   to = "/Kid_inferance.html"
@@ -10,3 +12,12 @@
   from = "/*"
   to = "/Kid_inferance.html"
   status = 200
+
+# Güvenlik başlıkları
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
