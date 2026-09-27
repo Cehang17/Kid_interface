@@ -56,9 +56,17 @@ Sistemde yapılan **tüm işlemler anında `kayit.csv` dosyasına kaydedilir**:
 
 ---
 
+## 🌐 Netlify ve Canlı Web Yayınlama (Hosting)
+
+Site, Netlify üzerinde doğrudan çalışacak şekilde yapılandırılmıştır (`_redirects`, `netlify.toml` ve `index.html` yönlendirmeleri hazırdır):
+1. Projeyi GitHub'a bağlayıp Netlify'da tek tıkla canlıya alabilirsiniz.
+2. QR kodlarının canlı site adresinize (örn: `https://cemile-site.netlify.app`) göre üretilmesi için QR modalındaki **"Ayarlar ⚙️"** sekmesinden özel alan adınızı kaydedebilirsiniz.
+
+---
+
 ## 📱 Telefondan Test Etme ve QR Kullanımı
 
-1. `baslat.bat` dosyasını çalıştırın.
-2. Konsolda çıkan yerel ağ adresini (örnek: `http://192.168.1.X:8000`) göreceksiniz.
+1. **Yerel Ağda:** `baslat.bat` dosyasını çalıştırın. Konsolda çıkan yerel ağ adresini (örnek: `http://192.168.1.X:8000`) göreceksiniz.
+2. **Canlıda:** Netlify linkinizi veya yerel adresi açın.
 3. Telefonunuzun kamerasını ekrandaki QR kodlardan birine tutun ve açılan bağlantıya dokunun.
 4. **Telefon doğrudan o çocuğun profiliyle şifresiz açılır**, çocuk sadece kendi hesabında güvenle oyununu oynar ve puanlarını toplar!
