@@ -14,6 +14,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <!-- SheetJS for Excel (.xlsx) Export -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- QRCode.js for generating QR Codes -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <!-- YouTube IFrame Player API -->
   <script src="https://www.youtube.com/iframe_api"></script>
 
@@ -124,10 +126,56 @@
     .badge-wiggle {
       animation: wiggleBadge 2.5s ease-in-out infinite;
     }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+
+      #printable-cards-container,
+      #printable-cards-container * {
+        visibility: visible;
+      }
+
+      #printable-cards-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white;
+        padding: 20px;
+        display: block !important;
+      }
+    }
   </style>
 </head>
 
 <body class="text-brand-darkText pb-14 selection:bg-amber-200">
+
+  <!-- SEVİMLİ QR GİRİŞ BİLDİRİMİ (TOAST) -->
+  <div id="welcome-toast"
+    class="fixed top-5 left-1/2 -translate-x-1/2 z-[100] transform -translate-y-32 opacity-0 pointer-events-none transition-all duration-500 max-w-md w-11/12 bg-white/95 backdrop-blur-md border-4 border-teal-400 rounded-3xl shadow-2xl p-4 flex items-center gap-3.5">
+    <div id="welcome-toast-avatar"
+      class="w-12 h-12 rounded-2xl bg-amber-200 flex items-center justify-center text-3xl shadow border-2 border-white shrink-0">
+      🐰
+    </div>
+    <div class="min-w-0 flex-1">
+      <div class="flex items-center gap-1.5 mb-0.5">
+        <span class="text-[10px] font-black bg-teal-500 text-white px-2 py-0.5 rounded-full shadow-xs">QR Girişi
+          Başarılı ✨</span>
+      </div>
+      <h4 id="welcome-toast-title"
+        class="font-heading font-black text-teal-950 text-sm sm:text-base leading-snug truncate">
+        Hoş Geldin Cemile Yıldız!
+      </h4>
+      <p id="welcome-toast-desc" class="text-xs font-bold text-teal-700 truncate">
+        Profilin açıldı, hastane macerana hemen başla! 🚀
+      </p>
+    </div>
+  </div>
+
+  <!-- YAZDIRMA İÇİN GİZLİ ALAN -->
+  <div id="printable-cards-container" class="hidden"></div>
 
   <!-- TOP HEADER / SEVİMLİ PROFİL BAR -->
   <header
@@ -166,22 +214,46 @@
           class="h-10 sm:h-12 w-auto object-contain drop-shadow-md group-hover:scale-110 transition-transform">
       </div>
 
-      <!-- Star Counter & Kartım Modal Butonu -->
-      <div class="flex items-center space-x-2 sm:space-x-3">
+      <!-- Star Counter, Kartım & Hemşire Modu Butonları -->
+      <div class="flex items-center space-x-1.5 sm:space-x-2.5">
         <!-- Star Count (Yıldız Sandığı) -->
         <div
-          class="bg-gradient-to-r from-amber-100 via-yellow-100 to-amber-200 border-3 border-amber-400 rounded-2xl px-3 py-1.5 flex items-center space-x-1.5 sm:space-x-2 shadow-sm transform hover:scale-105 transition cursor-default">
-          <i class="fa-solid fa-star text-amber-500 text-lg sm:text-2xl star-pulse filter drop-shadow"></i>
-          <span id="star-count" class="font-heading font-black text-amber-900 text-base sm:text-xl">0</span>
-          <span class="text-[11px] font-black text-amber-800 hidden sm:inline">⭐ Puan</span>
+          class="bg-gradient-to-r from-amber-100 via-yellow-100 to-amber-200 border-3 border-amber-400 rounded-2xl px-2.5 sm:px-3 py-1.5 flex items-center space-x-1 sm:space-x-1.5 shadow-sm transform hover:scale-105 transition cursor-default">
+          <i class="fa-solid fa-star text-amber-500 text-base sm:text-2xl star-pulse filter drop-shadow"></i>
+          <span id="star-count" class="font-heading font-black text-amber-900 text-sm sm:text-xl">0</span>
+          <span class="text-[10px] sm:text-[11px] font-black text-amber-800 hidden md:inline">⭐ Puan</span>
         </div>
 
         <!-- Kartım Modal Butonu -->
         <button onclick="toggleQRModal()" title="Sihirli Kartım"
-          class="bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-500 hover:from-teal-500 hover:to-emerald-500 text-white font-heading font-black px-3.5 py-2 rounded-2xl text-xs sm:text-sm transition flex items-center space-x-1.5 shadow-md border-b-3 border-teal-700 active:translate-y-0.5 active:border-b-0">
-          <i class="fa-solid fa-qrcode text-base"></i>
+          class="bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-500 hover:from-teal-500 hover:to-emerald-500 text-white font-heading font-black px-3 sm:px-3.5 py-2 rounded-2xl text-xs sm:text-sm transition flex items-center space-x-1 shadow-md border-b-3 border-teal-700 active:translate-y-0.5 active:border-b-0">
+          <i class="fa-solid fa-qrcode text-sm sm:text-base"></i>
           <span>Kartım ✨</span>
         </button>
+
+        <!-- HEMŞİRE MODU DURUM & GİRİŞ BUTONU (KİLİTLİ/AÇIK) -->
+        <div id="header-nurse-container" class="flex items-center gap-1.5">
+          <!-- Çocuk Modundayken: Hemşire Girişi Butonu -->
+          <button id="btn-nurse-login-header" onclick="openNurseLoginModal()" title="Hemşire / Personel Girişi"
+            class="bg-white/90 hover:bg-emerald-50 text-emerald-800 border-2 border-emerald-300 hover:border-emerald-400 font-heading font-bold px-2.5 py-1.5 sm:py-2 rounded-2xl text-xs transition flex items-center gap-1 shadow-xs transform hover:scale-105">
+            <i class="fa-solid fa-user-nurse text-emerald-600 text-sm"></i>
+            <span class="hidden sm:inline">Hemşire Abla</span>
+          </button>
+
+          <!-- Hemşire Modundayken: Yönetim ve Çocuk Moduna Kilitleme Butonları -->
+          <div id="nurse-active-header-controls" class="hidden flex items-center gap-1">
+            <button onclick="openNurseAdminModal()" title="Hemşire Yönetim & Görev Takip Paneli"
+              class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-heading font-black px-2.5 py-1.5 sm:py-2 rounded-2xl text-xs shadow-sm transition flex items-center gap-1.5 border-b-2 border-emerald-800 active:translate-y-0.5">
+              <i class="fa-solid fa-hospital-user text-sm"></i>
+              <span class="hidden sm:inline">👩‍⚕️ Hemşire Paneli</span>
+            </button>
+            <button onclick="logoutNurseMode()" title="Çocuk Moduna Geç (Telefonu Çocuğa Verirken Kitle)"
+              class="bg-gradient-to-r from-rose-500 to-red-500 hover:from-rose-600 hover:to-red-600 text-white font-heading font-black px-2.5 py-1.5 sm:py-2 rounded-2xl text-xs shadow-sm transition flex items-center gap-1 border-b-2 border-rose-800 active:translate-y-0.5">
+              <i class="fa-solid fa-lock"></i>
+              <span class="hidden sm:inline">Kitle 🔒</span>
+            </button>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -786,9 +858,14 @@
 
   <!-- STARTUP ONBOARDING / HASTA GİRİŞ & KAYIT MODAL -->
   <div id="auth-modal"
-    class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto hidden">
     <div
       class="bg-white rounded-3xl p-5 sm:p-7 max-w-lg w-full text-slate-800 border-4 border-teal-300 shadow-2xl relative my-auto max-h-[94vh] flex flex-col">
+
+      <!-- Kapat Butonu -->
+      <button onclick="closeAuthModal()"
+        class="absolute top-3.5 right-3.5 bg-rose-100 hover:bg-rose-200 text-rose-500 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center shadow-xs border border-rose-200 transition-transform transform hover:scale-110 active:scale-95"
+        title="Kapat">✕</button>
 
       <!-- MODAL HEADER -->
       <div class="text-center mb-4">
@@ -851,16 +928,18 @@
           </div>
         </div>
 
-        <form id="nurse-info-form" onsubmit="handleNurseStepSubmit(event)" class="space-y-3">
+        <form id="nurse-info-form" onsubmit="handleNurseStepSubmit(event)" autocomplete="off" class="space-y-3">
           <div>
             <label class="block text-xs font-black text-teal-950 mb-1">👤 Minik Kahramanın Adı & Soyadı:</label>
-            <input type="text" id="nurse-input-name" required placeholder="Örn: Efe Yılmaz"
+            <input type="text" id="nurse-input-name" name="patient_hero_name" required placeholder="Örn: Efe Yılmaz"
+              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
               class="w-full px-4 py-3 text-xs sm:text-sm bg-slate-50 border-2 border-slate-300 rounded-2xl focus:border-teal-400 focus:bg-white focus:outline-none transition font-bold">
           </div>
 
           <div>
             <label class="block text-xs font-black text-teal-950 mb-1">🚪 Gizli Üs / Oda Numarası:</label>
-            <input type="text" id="nurse-input-room" required placeholder="Örn: 204"
+            <input type="text" id="nurse-input-room" name="patient_hero_room" required placeholder="Örn: 204"
+              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
               class="w-full px-4 py-3 text-xs sm:text-sm bg-slate-50 border-2 border-slate-300 rounded-2xl focus:border-teal-400 focus:bg-white focus:outline-none transition font-bold">
           </div>
 
@@ -925,7 +1004,7 @@
         <!-- Search bar -->
         <div class="relative">
           <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-amber-500 text-sm"></i>
-          <input type="text" id="existing-search-input" oninput="filterExistingPatients()"
+          <input type="text" id="existing-search-input" name="search_heroes_query" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="filterExistingPatients()"
             placeholder="İsim veya oda no ile ara..."
             class="w-full pl-10 pr-3 py-2.5 text-xs sm:text-sm bg-slate-50 border-2 border-amber-300 rounded-2xl focus:border-amber-500 focus:bg-white focus:outline-none transition font-bold">
         </div>
@@ -980,80 +1059,215 @@
     </div>
   </div>
 
-  <!-- NURSE / STAFF ADMIN PANEL MODAL (LOGOYU ÇİFT TIKLAYINCA AÇILAN GİZLİ PERSONEL PANELİ) -->
-  <div id="nurse-admin-modal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
-    <div
-      class="bg-white rounded-3xl p-5 sm:p-6 max-w-2xl w-full text-slate-800 border-4 border-teal-400 shadow-2xl relative max-h-[90vh] flex flex-col">
-      <button onclick="closeNurseAdminModal()"
-        class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center transition">✕</button>
+  <!-- NEW PATIENT CREATED QR SUCCESS MODAL (YENİ EKLENEN HER ÇOCUK İÇİN ÖZEL QR KART TASARIMI) -->
+  <div id="new-patient-qr-success-modal" class="fixed inset-0 modal-backdrop z-[120] flex items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
+    <div class="bg-gradient-to-b from-amber-50 via-white to-teal-50 rounded-[2.5rem] p-5 sm:p-6 max-w-md w-full text-center border-4 border-amber-300 shadow-[0_25px_60px_-15px_rgba(20,184,166,0.35)] relative overflow-hidden animate-fadeIn my-auto max-h-[94vh] flex flex-col">
+      
+      <!-- Sparkle bubbles -->
+      <div class="absolute -top-6 -left-6 w-24 h-24 bg-yellow-200/40 rounded-full blur-xl pointer-events-none"></div>
+      <div class="absolute -bottom-6 -right-6 w-28 h-28 bg-teal-200/40 rounded-full blur-xl pointer-events-none"></div>
+      <div class="absolute top-3 left-4 text-xl select-none animate-spin" style="animation-duration: 8s;">✨</div>
+      <div class="absolute top-4 right-12 text-lg select-none animate-bounce">🌟</div>
 
-      <!-- Admin Header -->
-      <div class="flex items-center space-x-3 mb-3 shrink-0">
-        <div
-          class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center text-2xl shadow-sm">
-          📁
-        </div>
-        <div>
-          <div class="flex items-center space-x-2">
-            <h3 class="text-lg font-heading font-bold text-emerald-950">Sağlık Personeli Yönetim Paneli</h3>
-            <span id="csv-sync-badge"
-              class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-300">
-              🟢 kayit.csv Dosyasına Bağlı
-            </span>
-          </div>
-          <p class="text-xs text-gray-500">Tüm hasta kayıtları doğrudan <strong>kayit.csv</strong> dosyasına
-            işlenmektedir.</p>
-        </div>
+      <!-- Close Button -->
+      <button onclick="closeNewPatientSuccessModal()"
+        class="absolute top-3.5 right-3.5 bg-rose-100 hover:bg-rose-200 text-rose-500 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center shadow-xs border border-rose-200 transition-transform transform hover:scale-110 active:scale-95 z-20"
+        title="Kapat">✕</button>
+
+      <!-- Badge Title -->
+      <div class="shrink-0 mb-2">
+        <span class="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 text-white font-heading font-black text-[11px] uppercase tracking-wider px-3.5 py-1 rounded-full shadow-sm">
+          <span>🎉</span> Yeni Kahraman Kaydı Tamamlandı! <span>🌟</span>
+        </span>
       </div>
 
-      <!-- Quick Action Bar -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3 shrink-0">
-        <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-2.5 flex items-center justify-between">
-          <div>
-            <h4 class="font-heading font-bold text-emerald-900 text-xs">Excel / CSV Veritabanı</h4>
-            <p class="text-[10px] text-emerald-800">Hasta listesini .xlsx olarak indir</p>
+      <!-- Content Container -->
+      <div class="overflow-y-auto flex-1 px-1 pr-1.5 space-y-3">
+        <!-- Mascot Avatar Preview -->
+        <div class="relative w-20 h-20 mx-auto mt-1">
+          <div id="new-patient-modal-avatar"
+            class="w-20 h-20 bg-gradient-to-tr from-amber-200 via-yellow-300 to-teal-200 rounded-full flex items-center justify-center text-5xl shadow-lg border-3 border-white ring-4 ring-amber-300 animate-bounce">
+            🦁
           </div>
-          <button onclick="exportPatientsToExcel()"
-            class="bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-bold px-3 py-1.5 rounded-xl text-xs transition flex items-center space-x-1.5 shadow">
-            <i class="fa-solid fa-file-excel"></i>
-            <span>Excel İndir</span>
+          <span id="new-patient-modal-room-tag"
+            class="absolute -bottom-1 -right-2 bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full border-2 border-white shadow">
+            Oda 101
+          </span>
+        </div>
+
+        <div>
+          <h3 id="new-patient-modal-name" class="text-2xl font-heading font-black text-teal-950">
+            Efe Yılmaz
+          </h3>
+          <p id="new-patient-modal-mascot-title" class="text-xs font-bold text-teal-800">
+            🦁 Cesur Aslan &bull; Süper Kahraman
+          </p>
+        </div>
+
+        <!-- QR Code Card Box -->
+        <div class="bg-gradient-to-br from-teal-50 via-emerald-50 to-teal-100 border-3 border-dashed border-teal-400 p-4 rounded-3xl flex flex-col items-center justify-center shadow-inner relative">
+          <div class="text-[10px] font-black uppercase text-teal-900 mb-2 flex items-center gap-1">
+            <i class="fa-solid fa-qrcode text-teal-600"></i>
+            <span>Çocuğun Özel Giriş QR Kartı</span>
+          </div>
+
+          <div id="new-patient-qr-container"
+            class="bg-white p-3 rounded-2xl shadow-md border-2 border-teal-200 flex items-center justify-center min-h-[175px] min-w-[175px]">
+            <!-- Dynamic QR Code Injected via JS -->
+          </div>
+
+          <div id="new-patient-modal-id" class="hidden"></div>
+
+          <p class="text-[11px] text-teal-900 font-bold mt-2 leading-tight max-w-[280px]">
+            📱 Bu QR kodu çocuğun telefonundan okutulduğunda <strong>şifresiz doğrudan kendi profili</strong> açılır!
+          </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button onclick="printCreatedPatientBadge()"
+            class="bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-amber-950 font-heading font-black text-xs py-2.5 px-3 rounded-2xl shadow-md transition flex items-center justify-center gap-1.5 border-b-2 border-amber-600 active:translate-y-0.5">
+            <i class="fa-solid fa-print text-sm"></i>
+            <span>Kartı / Rozeti Yazdır</span>
+          </button>
+
+          <button onclick="copyCreatedPatientLink()"
+            class="bg-white hover:bg-teal-50 text-teal-800 border-2 border-teal-300 font-heading font-black text-xs py-2.5 px-3 rounded-2xl shadow-sm transition flex items-center justify-center gap-1.5 active:translate-y-0.5">
+            <i class="fa-solid fa-copy text-teal-600 text-sm"></i>
+            <span id="new-patient-copy-btn-text">Linki Kopyala</span>
           </button>
         </div>
 
-        <button onclick="openAuthModal(); closeNurseAdminModal();"
-          class="bg-teal-50 hover:bg-teal-100 text-teal-800 font-heading font-bold p-2.5 rounded-2xl border border-teal-200 text-xs transition flex items-center justify-center space-x-2">
-          <i class="fa-solid fa-arrows-rotate text-teal-600"></i>
-          <span>Giriş / Yeni Kayıt Ekranı</span>
+        <button onclick="closeNewPatientSuccessModal()"
+          class="w-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-heading font-black text-xs py-2.5 px-3 rounded-2xl shadow-md transition flex items-center justify-center gap-1.5 active:translate-y-0.5">
+          <span>Maceraya Başla! 🚀</span>
         </button>
       </div>
+    </div>
+  </div>
 
-      <!-- Patient Management Section -->
-      <div class="flex-1 flex flex-col min-h-0 bg-slate-50 border-2 border-slate-200 rounded-2xl p-3">
-        <div class="flex items-center justify-between mb-2 shrink-0">
-          <div class="flex items-center space-x-2">
-            <h4 class="font-heading font-bold text-slate-800 text-xs sm:text-sm">kayit.csv Dosyasındaki Çocuklar</h4>
-            <span id="nurse-patient-count-badge"
-              class="bg-teal-100 text-teal-800 text-[10px] font-bold px-2 py-0.5 rounded-full">0 Çocuk</span>
-          </div>
-          <!-- Nurse Search -->
-          <div class="relative w-48 sm:w-56">
-            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-gray-400 text-xs"></i>
-            <input type="text" id="nurse-search-input" oninput="filterNursePatients()"
-              placeholder="İsim veya oda ara..."
-              class="w-full pl-7 pr-2 py-1.5 text-xs bg-white border border-slate-300 rounded-xl focus:border-teal-400 focus:outline-none">
+  <!-- NURSE LOGIN MODAL (ŞİFRELİ HEMŞİRE GİRİŞİ) -->
+  <div id="nurse-login-modal" class="fixed inset-0 modal-backdrop z-[110] flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-sm w-full text-slate-800 border-4 border-emerald-400 shadow-2xl relative animate-fadeIn">
+      <!-- Close Button -->
+      <button onclick="closeNurseLoginModal()"
+        class="absolute top-3.5 right-3.5 bg-rose-100 hover:bg-rose-200 text-rose-500 w-8 h-8 rounded-full font-black text-sm flex items-center justify-center shadow-xs border border-rose-200 transition-transform transform hover:scale-110 active:scale-95"
+        title="Kapat">✕</button>
+
+      <div class="text-center mb-4">
+        <div class="w-14 h-14 bg-gradient-to-tr from-emerald-400 to-teal-500 text-white rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-md mb-2 border-2 border-white">
+          👩‍⚕️
+        </div>
+        <h3 class="text-xl font-heading font-black text-emerald-950">Hemşire Abla Girişi 🛡️</h3>
+        <p class="text-xs text-slate-600 font-bold mt-0.5">
+          Diğer çocukların profillerine ve yönetim paneline erişmek için giriş yapınız.
+        </p>
+      </div>
+
+      <form onsubmit="handleNurseLogin(event)" autocomplete="off" class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 mb-1">Kullanıcı Adı:</label>
+          <div class="relative">
+            <i class="fa-solid fa-user absolute left-3 top-3 text-gray-400 text-xs"></i>
+            <input type="text" id="nurse-username-input" name="nurse_auth_user" required placeholder="Kullanıcı adı" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+              class="w-full pl-8 pr-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white font-bold">
           </div>
         </div>
 
-        <!-- Nurse Patient Cards / Rows -->
-        <div id="nurse-patients-list-container" class="space-y-2 overflow-y-auto flex-1 pr-1">
-          <!-- Injected via JS -->
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 mb-1">Şifre:</label>
+          <div class="relative">
+            <i class="fa-solid fa-lock absolute left-3 top-3 text-gray-400 text-xs"></i>
+            <input type="password" id="nurse-password-input" name="nurse_auth_pass" required placeholder="••••" autocomplete="new-password"
+              class="w-full pl-8 pr-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white font-bold">
+          </div>
         </div>
+
+        <!-- Hata Mesajı -->
+        <div id="nurse-login-error" class="hidden bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold p-2 rounded-xl text-center">
+          Kullanıcı adı veya şifre hatalı!
+        </div>
+
+        <button type="submit"
+          class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-heading font-black py-2.5 rounded-2xl text-xs sm:text-sm shadow-md transition transform active:scale-98 flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-arrow-right-to-bracket"></i>
+          <span>Giriş Yap ve Yetkiyi Aç</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- NURSE CLINICAL MANAGEMENT & TASK TRACKING DASHBOARD MODAL -->
+  <div id="nurse-admin-modal" class="fixed inset-0 modal-backdrop z-[110] flex items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
+    <div
+      class="bg-white rounded-[2.5rem] p-5 sm:p-6 max-w-4xl w-full text-slate-800 border-4 border-emerald-400 shadow-[0_25px_60px_-15px_rgba(16,185,129,0.35)] relative max-h-[94vh] flex flex-col my-auto">
+      
+      <!-- Close Button -->
+      <button onclick="closeNurseAdminModal()"
+        class="absolute top-4 right-4 bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-600 text-lg font-black w-8 h-8 rounded-full flex items-center justify-center transition"
+        title="Kapat">✕</button>
+
+      <!-- Dashboard Header with Stats -->
+      <div class="mb-3 shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-12 h-12 bg-gradient-to-tr from-emerald-400 to-teal-500 text-white rounded-2xl flex items-center justify-center text-3xl shadow-md border-2 border-white shrink-0">
+            👩‍⚕️
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-xl sm:text-2xl font-heading font-black text-emerald-950">Hemşire Yönetim & Görev Takip Paneli</h3>
+              <span class="bg-emerald-100 text-emerald-800 text-[11px] font-black px-2.5 py-0.5 rounded-full border border-emerald-300">
+                🛡️ Yetkili Modu
+              </span>
+            </div>
+            <p class="text-xs text-slate-600 font-bold">
+              Servisteki çocuk hastaları seçin, 6 günlük sağlık görevini ve iyileşme ilerlemelerini canlı takip edin.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action & Search Bar -->
+      <div class="bg-slate-100/80 p-2.5 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 mb-3 shrink-0">
+        <!-- Live Search -->
+        <div class="relative w-full sm:w-72">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-emerald-600 text-xs"></i>
+          <input type="text" id="nurse-search-input" name="nurse_patients_search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="filterNursePatients()"
+            placeholder="İsim veya oda no ile filtrele..."
+            class="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded-xl focus:border-emerald-500 focus:outline-none font-bold">
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button onclick="openAuthModal(); closeNurseAdminModal(); startNewPatientFlow();"
+            class="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-heading font-black px-3 py-1.5 rounded-xl text-xs shadow-xs transition flex items-center gap-1.5">
+            <i class="fa-solid fa-plus"></i>
+            <span>Yeni Hasta Ekle</span>
+          </button>
+          
+          <button onclick="closeNurseAdminModal(); toggleQRModal(); switchQRTab('five');"
+            class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-heading font-black px-3 py-1.5 rounded-xl text-xs shadow-xs transition flex items-center gap-1.5">
+            <i class="fa-solid fa-qrcode"></i>
+            <span>Tüm QR'lar</span>
+          </button>
+
+          <button onclick="logoutNurseMode()"
+            class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-heading font-black px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1.5">
+            <i class="fa-solid fa-lock"></i>
+            <span>Kitle 🔒</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Patient Cards & Task Matrix Container -->
+      <div id="nurse-patients-list-container" class="space-y-2.5 overflow-y-auto flex-1 pr-1 max-h-[55vh]">
+        <!-- Injected via JS -->
       </div>
 
       <!-- Modal Footer -->
       <div class="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between shrink-0">
-        <span class="text-[11px] text-gray-500">💡 Not: Yapılan tüm değişiklikler ve puanlar anında
-          <strong>kayit.csv</strong> dosyasına kaydedilir.</span>
+        <span class="text-[11px] text-slate-500 font-bold">
+          💡 Bir çocuğun profiline geçmek için satırındaki <strong>"Seç & Profile Geç"</strong> butonuna basınız.
+        </span>
         <button onclick="closeNurseAdminModal()"
           class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-heading font-bold px-4 py-1.5 rounded-xl text-xs transition">
           Kapat
@@ -1062,104 +1276,233 @@
     </div>
   </div>
 
-  <!-- QR / HOŞ GELDİN KARTI MODAL (ÇOCUK KAHRAMAN PASAPORTU) -->
-  <div id="qr-modal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+  <!-- QR / HOŞ GELDİN KARTI MODAL (ÇOCUK KAHRAMAN PASAPORTU & 5 HAZIR QR KART) -->
+  <div id="qr-modal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-3 sm:p-4 hidden">
     <div
-      class="bg-gradient-to-b from-amber-50 via-white to-teal-50 rounded-[2.5rem] p-6 sm:p-7 max-w-sm sm:max-w-md w-full text-center border-4 border-amber-300 shadow-[0_25px_60px_-15px_rgba(20,184,166,0.35)] relative overflow-hidden animate-fadeIn">
+      class="bg-gradient-to-b from-amber-50 via-white to-teal-50 rounded-[2.5rem] p-5 sm:p-6 max-w-lg w-full text-center border-4 border-amber-300 shadow-[0_25px_60px_-15px_rgba(20,184,166,0.35)] relative overflow-hidden animate-fadeIn max-h-[92vh] flex flex-col">
 
       <!-- Arka Plan Sevimli Baloncuklar & Yıldızlar -->
       <div class="absolute -top-6 -left-6 w-24 h-24 bg-yellow-200/40 rounded-full blur-xl pointer-events-none"></div>
       <div class="absolute -bottom-6 -right-6 w-28 h-28 bg-teal-200/40 rounded-full blur-xl pointer-events-none"></div>
       <div class="absolute top-3 left-4 text-lg select-none opacity-60">✨</div>
-      <div class="absolute top-12 right-5 text-lg select-none opacity-60">🌟</div>
-      <div class="absolute bottom-16 left-4 text-lg select-none opacity-60">🎈</div>
+      <div class="absolute top-12 right-12 text-lg select-none opacity-60">🌟</div>
 
       <!-- Kapat Butonu -->
       <button onclick="toggleQRModal()"
-        class="absolute top-4 right-4 bg-rose-100 hover:bg-rose-200 text-rose-500 w-9 h-9 rounded-full font-black text-lg flex items-center justify-center shadow-sm border border-rose-200 transition-transform transform hover:scale-110 active:scale-95"
+        class="absolute top-3.5 right-3.5 bg-rose-100 hover:bg-rose-200 text-rose-500 w-9 h-9 rounded-full font-black text-lg flex items-center justify-center shadow-sm border border-rose-200 transition-transform transform hover:scale-110 active:scale-95 z-20"
         title="Kapat">✕</button>
 
       <!-- Üst Şerit Rozet -->
-      <div
-        class="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-orange-400 text-white font-heading font-black text-[11px] uppercase tracking-wider px-3.5 py-1 rounded-full shadow-sm mb-3">
-        <span>🛡️</span> Süper Kahraman Pasaportu <span>✨</span>
-      </div>
-
-      <!-- Maskot / Avatar -->
-      <div class="relative w-20 h-20 mx-auto mb-2">
-        <div id="qr-avatar-badge"
-          class="w-20 h-20 bg-gradient-to-tr from-amber-200 via-yellow-300 to-teal-200 rounded-full flex items-center justify-center text-5xl shadow-lg border-4 border-white ring-4 ring-amber-300 transition-transform transform hover:scale-110 cursor-pointer">
-          🦁
-        </div>
-        <span
-          class="absolute -bottom-1 -right-1 bg-teal-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full border-2 border-white shadow">
-          PRO ⭐
-        </span>
-      </div>
-
-      <!-- Başlık ve Açıklama -->
-      <h3 class="text-2xl font-heading font-black text-teal-950 mb-0.5">Sihirli QR Kartım 🚀</h3>
-      <p class="text-xs font-medium text-teal-700/80 mb-3">Hastane macerandaki gizli kapıları açan dijital kimliğin!</p>
-
-      <!-- Sevimli QR Kod Alanı -->
-      <div
-        class="bg-gradient-to-br from-teal-50 to-emerald-50 border-3 border-dashed border-teal-300 p-4 rounded-3xl mb-3.5 inline-flex flex-col items-center justify-center shadow-inner relative w-full">
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-teal-100 flex items-center justify-center">
-          <i class="fa-solid fa-qrcode text-7xl text-teal-800"></i>
-        </div>
-      </div>
-
-      <!-- Kahraman Bilgileri Kartları -->
-      <div class="grid grid-cols-2 gap-2 text-left mb-4">
-        <!-- Kahraman Adı -->
-        <div class="bg-teal-50/80 border border-teal-200/80 rounded-2xl p-2.5">
-          <span class="text-[10px] uppercase font-bold text-teal-600 block flex items-center gap-1">
-            <span>👤</span> Kahraman
-          </span>
-          <span id="qr-patient-name" class="font-extrabold text-teal-950 text-sm truncate block">Efe Yılmaz</span>
-        </div>
-
-        <!-- Oda Numarası -->
-        <div class="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-2.5">
-          <span class="text-[10px] uppercase font-bold text-amber-600 block flex items-center gap-1">
-            <span>🚪</span> Gizli Üs (Oda)
-          </span>
-          <span id="qr-patient-room" class="font-extrabold text-amber-950 text-sm truncate block">204</span>
-        </div>
-
-        <!-- Servis / Bölüm Bilgisi -->
-        <div class="col-span-2 bg-sky-50/80 border border-sky-200/80 rounded-2xl p-2.5 flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center text-lg shrink-0">
-            🏥
-          </div>
-          <div class="min-w-0">
-            <span class="text-[10px] uppercase font-bold text-sky-600 block">Macera Yeri</span>
-            <span class="font-bold text-sky-950 text-xs truncate block">Çocuk Sağlığı ve Hastalıkları Servisi</span>
-          </div>
-        </div>
-
-        <!-- Kazanılan Puan ve Rütbe -->
+      <div class="shrink-0 mb-2">
         <div
-          class="col-span-2 bg-gradient-to-r from-emerald-100/90 to-teal-100/90 border border-emerald-300 rounded-2xl p-2.5 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="text-2xl animate-bounce">⭐</span>
-            <div>
-              <span class="text-[10px] uppercase font-bold text-emerald-700 block">Yıldız Hazinesi & Rütbe</span>
-              <span id="qr-patient-points" class="font-black text-emerald-950 text-xs sm:text-sm">15 Puan (Minik
-                Kaşif)</span>
+          class="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-orange-400 text-white font-heading font-black text-[11px] uppercase tracking-wider px-3.5 py-1 rounded-full shadow-sm">
+          <span>🛡️</span> Sihirli Çocuk Kartım & QR Girişi <span>✨</span>
+        </div>
+      </div>
+
+      <!-- 3 Sekmeli Navigasyon Çubuğu (SADECE HEMŞİRE MODUNDA GÖRÜNÜR) -->
+      <div id="qr-modal-tabs-nav"
+        class="hidden flex items-center justify-center gap-1.5 bg-teal-100/70 p-1.5 rounded-2xl mb-3 shrink-0 border border-teal-200">
+        <button id="qr-tab-btn-single" onclick="switchQRTab('single')"
+          class="flex-1 py-1.5 px-2 rounded-xl font-heading font-black text-xs transition bg-white text-teal-900 shadow-sm border border-teal-200 flex items-center justify-center gap-1">
+          <span>⭐</span> Aktif Kartım
+        </button>
+        <button id="qr-tab-btn-five" onclick="switchQRTab('five')"
+          class="flex-1 py-1.5 px-2 rounded-xl font-heading font-bold text-xs text-teal-800 hover:bg-white/60 transition flex items-center justify-center gap-1">
+          <span>🎴</span> Tüm QR Kartları (<span id="all-qr-nav-count">5</span>)
+        </button>
+        <button id="qr-tab-btn-settings" onclick="switchQRTab('settings')"
+          class="py-1.5 px-2.5 rounded-xl font-heading font-bold text-xs text-teal-800 hover:bg-white/60 transition flex items-center justify-center gap-1"
+          title="Bağlantı & Canlı Ayarı">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+      </div>
+
+      <!-- KAYDIRILABİLİR İÇERİK ALANI -->
+      <div class="overflow-y-auto flex-1 px-1 pr-1.5 space-y-3">
+
+        <!-- SEKME 1: AKTİF ÇOCUĞUN KARTI -->
+        <div id="qr-tab-single" class="space-y-3">
+          <!-- Maskot / Avatar -->
+          <div class="relative w-16 h-16 mx-auto">
+            <div id="qr-avatar-badge"
+              class="w-16 h-16 bg-gradient-to-tr from-amber-200 via-yellow-300 to-teal-200 rounded-full flex items-center justify-center text-4xl shadow-md border-3 border-white ring-3 ring-amber-300 transition-transform transform hover:scale-110 cursor-pointer">
+              🐰
+            </div>
+            <span
+              class="absolute -bottom-1 -right-1 bg-teal-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border-2 border-white shadow">
+              PRO ⭐
+            </span>
+          </div>
+
+          <div>
+            <h3 id="qr-single-title" class="text-xl font-heading font-black text-teal-950 mb-0.5">Sihirli QR Kartım 🚀
+            </h3>
+            <p class="text-[11px] font-medium text-teal-700/90">
+              Telefonunun kamerasıyla aşağıdaki kodu okutarak bu profili anında telefonda açabilirsin!
+            </p>
+          </div>
+
+          <!-- Sevimli QR Kod Kutusu -->
+          <div
+            class="bg-gradient-to-br from-teal-50 to-emerald-50 border-3 border-dashed border-teal-300 p-3.5 rounded-3xl inline-flex flex-col items-center justify-center shadow-inner relative w-full">
+            <div id="qr-code-canvas-container"
+              class="bg-white p-3 rounded-2xl shadow-sm border border-teal-100 flex items-center justify-center min-h-[170px] min-w-[170px]">
+              <!-- QR kod JS ile buraya çizilir -->
+            </div>
+            <div id="qr-patient-code" class="hidden"></div>
+          </div>
+
+          <!-- Hızlı Butonlar (Yalnızca Hemşire Modunda Görünür) -->
+          <div id="qr-single-action-buttons" class="hidden flex items-center justify-center gap-2">
+            <button onclick="copyActiveQRLink()"
+              class="bg-white hover:bg-teal-50 text-teal-700 font-heading font-bold text-xs px-3 py-1.5 rounded-xl border border-teal-300 shadow-sm transition flex items-center gap-1.5">
+              <i class="fa-solid fa-copy"></i>
+              <span id="copy-link-text">Bağlantıyı Kopyala</span>
+            </button>
+            <button onclick="openActiveQRLink()"
+              class="bg-white hover:bg-sky-50 text-sky-700 font-heading font-bold text-xs px-3 py-1.5 rounded-xl border border-sky-300 shadow-sm transition flex items-center gap-1.5">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              <span>Sekmede Aç</span>
+            </button>
+            <button onclick="printSingleQRCard()"
+              class="bg-white hover:bg-amber-50 text-amber-800 font-heading font-bold text-xs px-3 py-1.5 rounded-xl border border-amber-300 shadow-sm transition flex items-center gap-1.5"
+              title="Bu kartı yazdır">
+              <i class="fa-solid fa-print"></i>
+              <span>Yazdır</span>
+            </button>
+          </div>
+
+          <!-- Kahraman Bilgileri Kartları -->
+          <div class="grid grid-cols-2 gap-2 text-left text-xs">
+            <!-- Kahraman Adı -->
+            <div class="bg-teal-50/90 border border-teal-200/80 rounded-2xl p-2">
+              <span class="text-[9px] uppercase font-bold text-teal-600 block flex items-center gap-1">
+                <span>👤</span> Kahraman
+              </span>
+              <span id="qr-patient-name" class="font-extrabold text-teal-950 text-xs sm:text-sm truncate block">Cemile
+                Yıldız</span>
+            </div>
+
+            <!-- Oda Numarası -->
+            <div class="bg-amber-50/90 border border-amber-200/80 rounded-2xl p-2">
+              <span class="text-[9px] uppercase font-bold text-amber-600 block flex items-center gap-1">
+                <span>🚪</span> Gizli Üs (Oda)
+              </span>
+              <span id="qr-patient-room"
+                class="font-extrabold text-amber-950 text-xs sm:text-sm truncate block">312</span>
+            </div>
+
+            <!-- Kazanılan Puan ve Rütbe -->
+            <div
+              class="col-span-2 bg-gradient-to-r from-emerald-100/90 to-teal-100/90 border border-emerald-300 rounded-2xl p-2 flex items-center justify-between">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xl animate-bounce">⭐</span>
+                <div>
+                  <span class="text-[9px] uppercase font-bold text-emerald-700 block">Yıldız Hazinesi</span>
+                  <span id="qr-patient-points" class="font-black text-emerald-950 text-xs">65 Puan (Mikrop
+                    Bükücü)</span>
+                </div>
+              </div>
+              <span class="bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-lg shadow-sm">
+                AKTİF 🏆
+              </span>
             </div>
           </div>
-          <span class="bg-emerald-500 text-white text-[10px] font-black px-2.5 py-1 rounded-xl shadow-sm">
-            AKTİF 🏆
-          </span>
         </div>
+
+        <!-- SEKME 2: TÜM HASTALARIN DİNAMİK QR KODLARI (YENİ EKLENENLER DAHİL) -->
+        <div id="qr-tab-five" class="hidden space-y-3">
+          <div
+            class="bg-gradient-to-r from-amber-50 to-teal-50 border border-amber-200 rounded-2xl p-2.5 text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <div class="flex items-center space-x-2">
+                <h4 class="font-heading font-black text-teal-950 text-xs sm:text-sm">🎴 Tüm Kahraman QR Kartları</h4>
+                <span id="all-qr-count-pill" class="bg-teal-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-2xs">
+                  5 Çocuk
+                </span>
+              </div>
+              <p class="text-[10px] text-teal-900 font-bold mt-0.5">
+                Yeni eklenen tüm hastaların QR kodları anında burada listelenir.
+              </p>
+            </div>
+            <div class="flex items-center gap-1.5 self-end sm:self-center shrink-0">
+              <button onclick="openAuthModal(); closeQRModal(); startNewPatientFlow();"
+                class="bg-emerald-500 hover:bg-emerald-600 text-white font-heading font-black text-[11px] px-2.5 py-1.5 rounded-xl transition shadow-xs flex items-center gap-1">
+                <i class="fa-solid fa-plus"></i> Yeni Ekle
+              </button>
+              <button onclick="printAllPatientQRCards()"
+                class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-heading font-black text-[11px] px-2.5 py-1.5 rounded-xl transition shadow-xs flex items-center gap-1">
+                <i class="fa-solid fa-print"></i> Toplu Yazdır
+              </button>
+            </div>
+          </div>
+
+          <!-- Canlı Arama Çubuğu -->
+          <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-teal-500 text-xs"></i>
+            <input type="text" id="all-qr-search-input" name="qr_cards_search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="filterAllQRCards()"
+              placeholder="Kahraman adı veya oda numarası ile ara..."
+              class="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-teal-200 rounded-xl focus:border-teal-500 focus:bg-white focus:outline-none transition font-bold">
+          </div>
+
+          <!-- Dinamik QR Kart Grid / Liste -->
+          <div id="five-qr-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-left max-h-72 overflow-y-auto pr-1">
+            <!-- JS ile tüm hastalar (yeni eklenenler dahil) render edilir -->
+          </div>
+        </div>
+
+        <!-- SEKME 3: QR BAĞLANTI AYARLARI (YEREL / NETLIFY) -->
+        <div id="qr-tab-settings" class="hidden space-y-3 text-left">
+          <div class="bg-sky-50 border border-sky-200 rounded-2xl p-3">
+            <h4 class="font-heading font-black text-sky-950 text-sm mb-1 flex items-center gap-1.5">
+              <span>🌐</span> Canlı / Ağ Bağlantı Ayarı
+            </h4>
+            <p class="text-xs text-sky-800 font-medium mb-3 leading-relaxed">
+              QR kodlar varsayılan olarak şu an bulunduğunuz web adresine göre üretilir. Netlify gibi bir siteye
+              yüklediğinizde veya bilgisayarınızın Wi-Fi IP'si ile telefonunuzdan test etmek istediğinizde adresi
+              buradan belirleyebilirsiniz.
+            </p>
+
+            <div class="space-y-2">
+              <label class="text-[11px] font-bold text-sky-900 block">
+                Özel Alan Adı / Canlı URL (İsteğe Bağlı):
+              </label>
+              <input type="text" id="custom-qr-host-input" name="custom_qr_host_name" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                placeholder="Örn: https://cemile-site.netlify.app veya http://192.168.1.50:8000"
+                class="w-full text-xs px-3 py-2 bg-white border border-sky-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-400 font-mono">
+              <p class="text-[10px] text-gray-500">
+                💡 Boş bırakırsanız otomatik olarak tarayıcının o anki adresi kullanılır: <code id="current-url-preview"
+                  class="font-mono text-teal-700 bg-teal-50 px-1 py-0.5 rounded"></code>
+              </p>
+            </div>
+
+            <div class="flex items-center gap-2 mt-3 pt-2 border-t border-sky-200/60">
+              <button onclick="saveCustomQRHost()"
+                class="bg-teal-500 hover:bg-teal-600 text-white font-heading font-bold text-xs px-3.5 py-1.5 rounded-xl transition shadow-sm">
+                Kaydet ve QR'ları Güncelle
+              </button>
+              <button onclick="resetCustomQRHost()"
+                class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-heading font-bold text-xs px-3 py-1.5 rounded-xl transition">
+                Sıfırla
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Kapat ve Devam Butonu -->
-      <button onclick="toggleQRModal()"
-        class="w-full bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-500 hover:from-teal-500 hover:to-emerald-500 text-white font-heading font-black py-3 px-6 rounded-2xl shadow-md hover:shadow-lg transform active:scale-95 transition-all text-sm sm:text-base border-b-4 border-teal-600 flex items-center justify-center gap-2">
-        <span>🚀</span> Maceraya Devam Et! <span>✨</span>
-      </button>
+      <!-- Modal Footer -->
+      <div class="pt-3 mt-2 border-t border-teal-100 flex items-center justify-between shrink-0">
+        <span class="text-[10px] text-teal-700 font-bold">
+          ✨ Telefon kamerası ile QR kodu okutabilirsiniz
+        </span>
+        <button onclick="toggleQRModal()"
+          class="bg-gradient-to-r from-teal-400 to-emerald-400 text-white font-heading font-black px-4 py-1.5 rounded-xl text-xs shadow-sm hover:from-teal-500 hover:to-emerald-500 transition">
+          Tamam 🚀
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -1205,59 +1548,30 @@
     const STORAGE_KEY = 'cbu_pediatric_patients';
     const ACTIVE_ID_KEY = 'cbu_active_patient_id';
 
-    const INITIAL_SEED_PATIENTS = [
-      {
-        id: 'CBÜ-2026-101',
-        name: 'Efe Yılmaz',
-        room: '204',
-        avatar: '🦁',
-        avatarTitle: 'Cesur Aslan',
-        points: 25,
-        completedTasks: ['task-water', 'task-food'],
-        createdAt: '26.09.2026'
-      },
-      {
-        id: 'CBÜ-2026-102',
-        name: 'Zeynep Kaya',
-        room: '108',
-        avatar: '🦢',
-        avatarTitle: 'Zarif Kuğu',
-        points: 55,
-        completedTasks: ['task-water', 'task-food', 'task-hygiene', 'task-medicine'],
-        createdAt: '26.09.2026'
-      },
-      {
-        id: 'CBÜ-2026-103',
-        name: 'Ali Demir',
-        room: '312',
-        avatar: '🐯',
-        avatarTitle: 'Güçlü Kaplan',
-        points: 10,
-        completedTasks: ['task-hygiene'],
-        createdAt: '26.09.2026'
-      }
-    ];
-
     let patients = [];
     let activePatientId = null;
     let isCsvServerConnected = false;
+    let isNurseLoggedIn = sessionStorage.getItem('cbu_nurse_session') === 'true';
+    let pendingNurseAction = null;
 
     async function initPatientData() {
+      // URL parametre kontrolü (Telefondan QR okutulup okutulmadığı)
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetParamId = urlParams.get('id') || urlParams.get('patient') || urlParams.get('hasta');
+
       // 1. Önce kayit.csv sunucusundan veri çekmeyi dene
       try {
         const response = await fetch(API_ENDPOINT, { cache: 'no-store' });
         if (response.ok) {
           const csvData = await response.json();
-          if (Array.isArray(csvData) && csvData.length > 0) {
+          if (Array.isArray(csvData)) {
             patients = csvData;
             isCsvServerConnected = true;
-          } else if (Array.isArray(csvData)) {
-            patients = [];
-            isCsvServerConnected = true;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(patients));
           }
         }
       } catch (err) {
-        console.warn('CSV Sunucusuna doğrudan bağlanılamadı, yerel önbellek kontrol ediliyor:', err);
+        console.warn('CSV Sunucusuna bağlanılamadı, yerel önbellek kontrol ediliyor:', err);
         isCsvServerConnected = false;
       }
 
@@ -1266,16 +1580,37 @@
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
           try {
-            patients = JSON.parse(stored);
+            const parsed = JSON.parse(stored);
+            patients = Array.isArray(parsed) ? parsed : [];
           } catch (e) {
-            patients = INITIAL_SEED_PATIENTS;
+            patients = [];
           }
         } else {
-          patients = INITIAL_SEED_PATIENTS;
+          patients = [];
         }
       }
 
       // Aktif hasta belirleme
+      if (targetParamId) {
+        // QR Kod ile doğrudan bağlantı açıldı! -> Çocuğa özel temiz Çocuk Modu başlat
+        isNurseLoggedIn = false;
+        sessionStorage.removeItem('cbu_nurse_session');
+
+        let targetPatient = patients.find(p => p.id === targetParamId);
+
+        if (targetPatient) {
+          activePatientId = targetPatient.id;
+          localStorage.setItem(ACTIVE_ID_KEY, activePatientId);
+          updateCsvSyncBadge();
+          renderActivePatient();
+          updateNurseModeUI();
+          closeAuthModal();
+          showWelcomeToast(targetPatient);
+          return;
+        }
+      }
+
+      // Normal giriş (QR parametresi olmadan doğrudan siteye girildiğinde)
       const activeId = localStorage.getItem(ACTIVE_ID_KEY);
       if (activeId && patients.some(p => p.id === activeId)) {
         activePatientId = activeId;
@@ -1288,16 +1623,21 @@
 
       updateCsvSyncBadge();
       renderActivePatient();
+      updateNurseModeUI();
 
-      // Sisteme ilk girişte direkt karşılama pop-up'ını aç
-      openAuthModal();
+      // Normal girişte ilk olarak hemşire girişini sor, giriş yapılmışsa yönetim panelini aç
+      if (!isNurseLoggedIn) {
+        openNurseLoginModal('admin');
+      } else {
+        openNurseAdminModal();
+      }
     }
 
     async function savePatients() {
       // 1. Her zaman yerel önbelleğe yaz
       localStorage.setItem(STORAGE_KEY, JSON.stringify(patients));
 
-      // 2. Arka planda anında kayit.csv dosyasına kaydet
+      // 2. Arka planda anında kayit.xlsx ve kayit.csv dosyalarına kaydet
       try {
         const response = await fetch(API_ENDPOINT, {
           method: 'POST',
@@ -1308,7 +1648,7 @@
           isCsvServerConnected = true;
         }
       } catch (e) {
-        console.warn('kayit.csv dosyasına anlık yazılamadı (Sunucu çalıştırılmamış olabilir):', e);
+        console.warn('Excel / CSV dosyasına anlık yazılamadı (Sunucu çalıştırılmamış olabilir):', e);
         isCsvServerConnected = false;
       }
 
@@ -1319,7 +1659,7 @@
       const badge = document.getElementById('csv-sync-badge');
       if (!badge) return;
       if (isCsvServerConnected) {
-        badge.innerText = '🟢 kayit.csv Dosyasına Bağlı (Anlık Kayıt)';
+        badge.innerText = '🟢 kayit.csv Anlık Kayıt Aktif';
         badge.className = 'bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-300';
       } else {
         badge.innerText = '🟡 Çevrimdışı Mod (baslat.bat ile açınız)';
@@ -1406,22 +1746,33 @@
       // 3.5 Video Görev Durumu Güncelle
       checkCurrentVideoStatus();
 
-      // 4. QR Kimlik Kartı
+      // 4. QR Kimlik Kartı ve 5 Hazır QR Kod
       const qrAvatar = document.getElementById('qr-avatar-badge');
       const qrCode = document.getElementById('qr-patient-code');
       const qrName = document.getElementById('qr-patient-name');
       const qrRoom = document.getElementById('qr-patient-room');
       const qrPoints = document.getElementById('qr-patient-points');
+      const qrTitle = document.getElementById('qr-single-title');
 
       if (qrAvatar) qrAvatar.innerText = current.avatar;
       if (qrCode) qrCode.innerText = `KOD: ${current.id}`;
       if (qrName) qrName.innerText = current.name;
       if (qrRoom) qrRoom.innerText = current.room;
       if (qrPoints) qrPoints.innerText = `${starCount} Puan (${rankInfo.title})`;
+      if (qrTitle) qrTitle.innerText = `${current.name} - Sihirli Kartım 🚀`;
+
+      // QR Kodlarını dinamik olarak oluştur
+      renderActiveQRCode();
+      render5QRCards();
+      updateQRSettingsPreview();
     }
 
     // --- ONBOARDING POP-UP CONTROLS ---
     function openAuthModal() {
+      if (!isNurseLoggedIn) {
+        openNurseLoginModal('choice');
+        return;
+      }
       const modal = document.getElementById('auth-modal');
       if (modal) modal.classList.remove('hidden');
       showChoiceScreen();
@@ -1529,6 +1880,8 @@
       });
     }
 
+    let newlyCreatedPatientForQR = null;
+
     function completeKidRegistration() {
       if (!tempNurseData) {
         showChoiceScreen();
@@ -1554,17 +1907,23 @@
       renderActivePatient();
       closeAuthModal();
 
-      alert(`🎉 Hoş Geldin Minik Kahraman ${newPatient.name}! ${newPatient.avatar} ${newPatient.avatarTitle} maskotunla iyileşme maceran başlıyor! 🚀`);
+      // Yeni eklenen çocuk için özel tasarlanan QR kod kutlama ekranını aç
+      openNewPatientSuccessModal(newPatient);
     }
 
     function showExistingPatientsList() {
+      if (!isNurseLoggedIn) {
+        openNurseLoginModal('existing_list');
+        return;
+      }
+
       document.getElementById('auth-step-choice').classList.add('hidden');
       document.getElementById('auth-step-nurse').classList.add('hidden');
       document.getElementById('auth-step-kid').classList.add('hidden');
       document.getElementById('auth-step-existing').classList.remove('hidden');
 
       document.getElementById('auth-modal-main-title').innerText = 'Kayıtlı Kahramanlar 🌟';
-      document.getElementById('auth-modal-sub-title').innerText = 'Devam etmek için kendi profilini seç';
+      document.getElementById('auth-modal-sub-title').innerText = 'Devam etmek için hasta profilini seçiniz';
 
       renderExistingPatientsList();
     }
@@ -1646,9 +2005,8 @@
       savePatients();
       renderActivePatient();
       filterExistingPatients();
-      if (typeof renderNursePatientsTable === 'function') {
-        filterNursePatients();
-      }
+      renderNursePatientsTable();
+      render5QRCards();
     }
 
     function filterExistingPatients() {
@@ -1671,6 +2029,9 @@
       localStorage.setItem(ACTIVE_ID_KEY, id);
       renderActivePatient();
       closeAuthModal();
+      if (typeof renderNursePatientsTable === 'function') {
+        renderNursePatientsTable();
+      }
     }
 
     // --- AVATAR DEĞİŞTİRME MODALI (ÇOCUK KENDİ AVATARINA TIKLAYINCA) ---
@@ -1734,22 +2095,115 @@
       closeAvatarChangeModal();
     }
 
-    // --- LOGO TIKLAMASI (GİZLİ HEMŞİRE / PERSONEL ERİŞİMİ) ---
-    let logoClickCount = 0;
-    let logoClickTimer = null;
-    function handleLogoNurseClick() {
-      logoClickCount++;
-      clearTimeout(logoClickTimer);
-      logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 1200);
+    // --- ŞİFRELİ HEMŞİRE ABLA MODU & GÜVENLİK SİSTEMİ ---
+    function openNurseLoginModal(targetAction = 'admin') {
+      pendingNurseAction = targetAction;
+      const modal = document.getElementById('nurse-login-modal');
+      const errBox = document.getElementById('nurse-login-error');
+      const userInp = document.getElementById('nurse-username-input');
+      const passInp = document.getElementById('nurse-password-input');
 
-      // 2 kez logoya tıklandığında personel paneli açılır
-      if (logoClickCount >= 2) {
-        logoClickCount = 0;
+      if (errBox) errBox.classList.add('hidden');
+      if (userInp) userInp.value = '';
+      if (passInp) passInp.value = '';
+
+      if (modal) modal.classList.remove('hidden');
+      setTimeout(() => { if (userInp) userInp.focus(); }, 100);
+    }
+
+    function closeNurseLoginModal() {
+      const modal = document.getElementById('nurse-login-modal');
+      if (modal) modal.classList.add('hidden');
+      pendingNurseAction = null;
+    }
+
+    function handleNurseLogin(event) {
+      event.preventDefault();
+      const userInp = document.getElementById('nurse-username-input');
+      const passInp = document.getElementById('nurse-password-input');
+      const errBox = document.getElementById('nurse-login-error');
+
+      const username = (userInp ? userInp.value : '').trim().toLowerCase();
+      const password = (passInp ? passInp.value : '').trim();
+
+      // Yetkili kullanıcı adı ve şifre kontrolü
+      const validUsers = ['hemsire', 'hemşire', 'admin', 'doktor', 'cbu'];
+      const validPasswords = ['1234', 'cbu2026', 'hemsire123', 'admin'];
+
+      if (validUsers.includes(username) && validPasswords.includes(password)) {
+        isNurseLoggedIn = true;
+        sessionStorage.setItem('cbu_nurse_session', 'true');
+        updateNurseModeUI();
+        closeNurseLoginModal();
+
+        const action = pendingNurseAction;
+        pendingNurseAction = null;
+
+        if (action === 'five') {
+          const qrModal = document.getElementById('qr-modal');
+          if (qrModal && qrModal.classList.contains('hidden')) {
+            toggleQRModal();
+          }
+          switchQRTab('five');
+        } else {
+          openNurseAdminModal();
+        }
+      } else {
+        if (errBox) {
+          errBox.classList.remove('hidden');
+          errBox.innerText = 'Kullanıcı adı veya şifre hatalı!';
+        }
+      }
+    }
+
+    function logoutNurseMode() {
+      isNurseLoggedIn = false;
+      sessionStorage.removeItem('cbu_nurse_session');
+      updateNurseModeUI();
+      closeNurseAdminModal();
+
+      const active = getActivePatient();
+      if (active && active.id) {
+        const targetUrl = getPatientQRUrl(active.id);
+        window.location.href = targetUrl;
+      } else {
+        window.location.href = getBaseUrl();
+      }
+    }
+
+    function updateNurseModeUI() {
+      const btnHeaderLogin = document.getElementById('btn-nurse-login-header');
+      const headerNurseControls = document.getElementById('nurse-active-header-controls');
+      const qrTabsNav = document.getElementById('qr-modal-tabs-nav');
+      const qrSingleActions = document.getElementById('qr-single-action-buttons');
+
+      if (isNurseLoggedIn) {
+        if (btnHeaderLogin) btnHeaderLogin.classList.add('hidden');
+        if (headerNurseControls) headerNurseControls.classList.remove('hidden');
+        if (qrTabsNav) qrTabsNav.classList.remove('hidden');
+        if (qrSingleActions) qrSingleActions.classList.remove('hidden');
+      } else {
+        if (btnHeaderLogin) btnHeaderLogin.classList.remove('hidden');
+        if (headerNurseControls) headerNurseControls.classList.add('hidden');
+        if (qrTabsNav) qrTabsNav.classList.add('hidden');
+        if (qrSingleActions) qrSingleActions.classList.add('hidden');
+      }
+    }
+
+    // --- HEMŞİRE YÖNETİM & GÖREV TAKİP PANELİ ---
+    function handleLogoNurseClick() {
+      if (isNurseLoggedIn) {
         openNurseAdminModal();
+      } else {
+        openNurseLoginModal('admin');
       }
     }
 
     function openNurseAdminModal() {
+      if (!isNurseLoggedIn) {
+        openNurseLoginModal('admin');
+        return;
+      }
       const modal = document.getElementById('nurse-admin-modal');
       if (modal) {
         modal.classList.remove('hidden');
@@ -1764,56 +2218,114 @@
 
     function renderNursePatientsTable(filtered = null) {
       const container = document.getElementById('nurse-patients-list-container');
-      const countBadge = document.getElementById('nurse-patient-count-badge');
       if (!container) return;
 
       const list = filtered !== null ? filtered : patients;
-      if (countBadge) countBadge.innerText = `${patients.length} Çocuk`;
 
       if (list.length === 0) {
         container.innerHTML = `
-          <div class="text-center py-6 text-gray-400">
-            <i class="fa-solid fa-user-slash text-2xl mb-1"></i>
-            <p class="text-xs">Kayıtlı hasta bulunamadı.</p>
+          <div class="text-center py-8 text-gray-400 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+            <span class="text-3xl block mb-2">🔍</span>
+            <p class="text-xs font-bold text-slate-700">Aramanıza uygun kayıtlı çocuk hasta bulunamadı.</p>
           </div>
         `;
         return;
       }
 
+      // 6 Temel Sağlık Görevi Listesi
+      const ALL_TASKS = [
+        { id: 'task-water', name: 'Su', icon: '💧' },
+        { id: 'task-food', name: 'Yemek', icon: '🥗' },
+        { id: 'task-hygiene', name: 'El Yıkama', icon: '🧼' },
+        { id: 'task-medicine', name: 'İlaç', icon: '💊' },
+        { id: 'task-sleep', name: 'Uyku', icon: '🌙' },
+        { id: 'task-video', name: 'Video', icon: '🎬' }
+      ];
+
       container.innerHTML = list.map(p => {
         const isActive = p.id === activePatientId;
         const rankInfo = getRankForPoints(p.points || 0);
+        const completed = p.completedTasks || [];
+        const taskPercent = Math.round((completed.length / 6) * 100);
+
+        const taskBadgesHtml = ALL_TASKS.map(t => {
+          const isDone = completed.includes(t.id);
+          return `
+            <div class="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold border transition ${isDone
+              ? 'bg-emerald-100 border-emerald-300 text-emerald-900 font-black shadow-2xs'
+              : 'bg-slate-100 border-slate-200 text-slate-400 opacity-60'
+            }" title="${t.name}: ${isDone ? 'Tamamlandı ✅' : 'Henüz Yapılmadı ⏳'}">
+              <span>${t.icon}</span>
+              <span class="truncate max-w-[45px] sm:max-w-none">${t.name}</span>
+              <span>${isDone ? '✓' : '•'}</span>
+            </div>
+          `;
+        }).join('');
+
         return `
-          <div class="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-xl hover:border-teal-300 transition text-xs">
-            <div class="flex items-center space-x-2.5">
-              <div class="w-9 h-9 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-xl shrink-0">
-                ${p.avatar}
+          <div class="p-3.5 bg-white border-2 rounded-2xl transition shadow-xs hover:shadow-md ${isActive
+            ? 'border-emerald-400 bg-gradient-to-r from-emerald-50/50 via-teal-50/30 to-white ring-2 ring-emerald-300/60'
+            : 'border-slate-200 hover:border-teal-300'
+          }">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <!-- Sol: Çocuk Kimlik & Rütbe -->
+              <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-200 to-yellow-300 border-2 border-white ring-2 ring-amber-300 flex items-center justify-center text-3xl shrink-0 shadow-sm">
+                  ${p.avatar}
+                </div>
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <h4 class="font-heading font-black text-slate-900 text-sm sm:text-base">${p.name}</h4>
+                    <span class="bg-amber-100 text-amber-900 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-300">
+                      🚪 Oda ${p.room}
+                    </span>
+                    ${isActive ? '<span class="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-2xs animate-pulse">🟢 Aktif</span>' : ''}
+                  </div>
+                  <div class="flex items-center space-x-2 text-[11px] text-slate-600 font-bold mt-0.5">
+                    <span class="text-amber-700 font-extrabold">⭐ ${p.points || 0} Puan</span>
+                    <span>&bull;</span>
+                    <span class="text-teal-900 font-black">${rankInfo.icon} ${rankInfo.title}</span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <div class="flex items-center space-x-1.5">
-                  <span class="font-bold text-slate-800">${p.name}</span>
-                  <span class="bg-teal-100 text-teal-800 font-bold px-1.5 py-0.2 rounded text-[10px]">Oda ${p.room}</span>
-                  ${isActive ? '<span class="bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded text-[10px]">Aktif</span>' : ''}
-                </div>
-                <div class="text-[10px] text-gray-500 flex items-center space-x-1.5 mt-0.5">
-                  <span class="font-mono text-slate-600">${p.id}</span>
-                  <span>•</span>
-                  <span class="font-bold text-amber-600">⭐ ${p.points || 0} Puan</span>
-                  <span>•</span>
-                  <span>${rankInfo.icon} ${rankInfo.title}</span>
-                </div>
+
+              <!-- Sağ: İşlemler (Seç & Profile Geç, QR Kart, Sil) -->
+              <div class="flex items-center gap-1.5 self-end md:self-center shrink-0">
+                <button onclick="selectExistingPatient('${p.id}'); closeNurseAdminModal();"
+                  class="font-heading font-black text-xs px-3 py-1.5 rounded-xl transition shadow-xs flex items-center gap-1.5 ${isActive
+                    ? 'bg-emerald-600 text-white cursor-default'
+                    : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white active:scale-95'
+                  }">
+                  <i class="fa-solid ${isActive ? 'fa-check' : 'fa-arrow-right-to-bracket'}"></i>
+                  <span>${isActive ? 'Seçili Profil' : 'Seç & Profile Geç'}</span>
+                </button>
+
+                <button onclick="openPatientQRFromAdmin('${p.id}')" title="Bu Çocuğun QR Kartını Aç ve Yazdır"
+                  class="bg-amber-100 hover:bg-amber-200 text-amber-950 font-heading font-bold text-xs px-2.5 py-1.5 rounded-xl transition border border-amber-300 flex items-center gap-1">
+                  <i class="fa-solid fa-qrcode text-amber-700"></i>
+                  <span class="hidden sm:inline">QR Kart</span>
+                </button>
+
+                <button onclick="deletePatient('${p.id}')" title="Bu Kaydı Sil"
+                  class="bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 font-heading font-bold text-xs p-1.5 px-2 rounded-xl transition border border-rose-200">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
               </div>
             </div>
-            <div class="flex items-center space-x-1.5 shrink-0">
-              <button onclick="selectExistingPatient('${p.id}'); closeNurseAdminModal();"
-                class="bg-teal-50 hover:bg-teal-100 text-teal-700 font-bold px-2.5 py-1 rounded-lg text-[11px] transition">
-                Seç
-              </button>
-              <button onclick="deletePatient('${p.id}')" title="Bu kaydı sil"
-                class="bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 font-bold px-2.5 py-1 rounded-lg text-[11px] transition border border-rose-200 flex items-center space-x-1">
-                <i class="fa-solid fa-trash-can"></i>
-                <span class="hidden sm:inline">Sil</span>
-              </button>
+
+            <!-- Görev Takip Matrisi ve İlerleme -->
+            <div class="mt-2.5 pt-2.5 border-t border-slate-100">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-1.5">
+                <span class="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+                  <span>🎯</span> Günlük Görev Durumu (${completed.length}/6 Tamamlandı):
+                </span>
+                <span class="text-[10px] font-bold text-emerald-800">
+                  İyileşme Motivasyonu: %${taskPercent}
+                </span>
+              </div>
+              <div class="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                ${taskBadgesHtml}
+              </div>
             </div>
           </div>
         `;
@@ -1833,51 +2345,6 @@
         (p.id && p.id.toLowerCase().includes(query))
       );
       renderNursePatientsTable(filtered);
-    }
-
-    // --- EXCEL (.XLSX) DIŞA AKTARMA MOTORU ---
-    function exportPatientsToExcel() {
-      if (!patients || patients.length === 0) {
-        alert('İndirilecek kayıtlı hasta bulunamadı.');
-        return;
-      }
-
-      if (typeof XLSX === 'undefined') {
-        alert('Excel kütüphanesi yükleniyor, lütfen birkaç saniye sonra tekrar deneyin.');
-        return;
-      }
-
-      const excelData = patients.map((p, index) => {
-        let rankInfo = getRankForPoints(p.points || 0);
-        return {
-          "Sıra No": index + 1,
-          "Özel Hasta ID": p.id || '',
-          "Adı Soyadı": p.name || '',
-          "Oda Numarası": p.room || '',
-          "Seçilen Avatar": `${p.avatar} ${p.avatarTitle || ''}`,
-          "Toplam Yıldız Puanı": p.points || 0,
-          "Mevcut Rütbe": `${rankInfo.icon} ${rankInfo.title}`,
-          "Tamamlanan Görev Sayısı": `${(p.completedTasks || []).length} / 5`,
-          "Kayıt Tarihi": p.createdAt || new Date().toLocaleDateString('tr-TR')
-        };
-      });
-
-      const worksheet = XLSX.utils.json_to_sheet(excelData);
-      worksheet['!cols'] = [
-        { wch: 8 },  // Sıra No
-        { wch: 16 }, // ID
-        { wch: 22 }, // İsim
-        { wch: 14 }, // Oda No
-        { wch: 20 }, // Avatar
-        { wch: 18 }, // Puan
-        { wch: 22 }, // Rütbe
-        { wch: 24 }, // Görevler
-        { wch: 14 }  // Tarih
-      ];
-
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Hasta_Listesi");
-      XLSX.writeFile(workbook, "CBU_Cocuk_Servisi_Hasta_Listesi.xlsx");
     }
 
     // --- GÖREV ÖDÜL KAZANIMI (AKTİF ÇOCUĞA ÖZEL) ---
@@ -1984,9 +2451,467 @@
       }
     }
 
+    // --- QR KOD YÖNETİMİ & 5 HAZIR QR KART SİSTEMİ ---
     function toggleQRModal() {
       const modal = document.getElementById('qr-modal');
+      if (!modal) return;
       modal.classList.toggle('hidden');
+      if (!modal.classList.contains('hidden')) {
+        updateNurseModeUI();
+        if (!isNurseLoggedIn) {
+          switchQRTab('single');
+        } else {
+          renderActiveQRCode();
+          render5QRCards();
+          updateQRSettingsPreview();
+        }
+      }
+    }
+
+    function closeQRModal() {
+      const modal = document.getElementById('qr-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function getBaseUrl() {
+      const customHost = localStorage.getItem('cbu_custom_qr_host');
+      if (customHost && customHost.trim()) {
+        let host = customHost.trim();
+        if (!host.startsWith('http://') && !host.startsWith('https://')) {
+          host = 'https://' + host;
+        }
+        if (host.endsWith('/')) host = host.slice(0, -1);
+        let path = window.location.pathname;
+        if (!path.endsWith('.html') && !path.endsWith('/')) {
+          path += '/Kid_inferance.html';
+        }
+        return host + path;
+      }
+      return window.location.origin + window.location.pathname;
+    }
+
+    function getPatientQRUrl(patientId) {
+      const baseUrl = getBaseUrl();
+      return `${baseUrl}?id=${encodeURIComponent(patientId)}`;
+    }
+
+    function generateQRCodeElement(container, text, size = 150) {
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (typeof QRCode !== 'undefined') {
+        try {
+          new QRCode(container, {
+            text: text,
+            width: size,
+            height: size,
+            colorDark: '#0f766e',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+          });
+          return;
+        } catch (e) {
+          console.warn('QRCode library error:', e);
+        }
+      }
+
+      // Fallback: API tabanlı QR görseli
+      const img = document.createElement('img');
+      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&color=0f766e&bgcolor=ffffff&data=${encodeURIComponent(text)}`;
+      img.alt = 'QR Kodu';
+      img.className = 'w-full h-full object-contain rounded-xl';
+      container.appendChild(img);
+    }
+
+    function renderActiveQRCode() {
+      const container = document.getElementById('qr-code-canvas-container');
+      const active = getActivePatient();
+      if (!container || !active) return;
+      const url = getPatientQRUrl(active.id);
+      generateQRCodeElement(container, url, 150);
+    }
+
+    function render5QRCards(filtered = null) {
+      const grid = document.getElementById('five-qr-cards-grid');
+      const countPill = document.getElementById('all-qr-count-pill');
+      const navCount = document.getElementById('all-qr-nav-count');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const listToRender = filtered !== null ? filtered : patients;
+      if (countPill) countPill.innerText = `${patients.length} Çocuk`;
+      if (navCount) navCount.innerText = patients.length;
+
+      if (listToRender.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-1 sm:col-span-2 text-center py-6 text-gray-400 bg-teal-50/50 rounded-2xl border border-dashed border-teal-200">
+            <span class="text-3xl block mb-1">🔍</span>
+            <p class="text-xs font-bold text-teal-900">Aramanıza uygun QR kartı bulunamadı.</p>
+          </div>
+        `;
+        return;
+      }
+
+      listToRender.forEach((patient, idx) => {
+        const isActive = activePatientId === patient.id;
+        const patientUrl = getPatientQRUrl(patient.id);
+        const cardDiv = document.createElement('div');
+        cardDiv.className = `p-3 rounded-2xl border-2 transition relative flex flex-col items-center text-center ${isActive
+            ? 'bg-gradient-to-b from-teal-50 to-emerald-50 border-teal-400 shadow-md ring-2 ring-teal-300'
+            : 'bg-white border-slate-200 hover:border-teal-300 hover:shadow-sm'
+          }`;
+
+        cardDiv.innerHTML = `
+          ${isActive ? '<span class="absolute top-2 right-2 bg-teal-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-xs">AKTİF</span>' : ''}
+          <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-2xl mb-1 shadow-xs border border-amber-200">
+            ${patient.avatar}
+          </div>
+          <h5 class="font-heading font-black text-xs text-teal-950 truncate max-w-[130px]">${patient.name}</h5>
+          <div class="flex items-center justify-center gap-1.5 text-[10px] text-gray-600 mb-2">
+            <span class="bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full font-bold">Oda ${patient.room}</span>
+          </div>
+          <!-- Mini QR Container -->
+          <div id="mini-qr-${idx}" class="bg-white p-1.5 rounded-xl border border-teal-100 shadow-inner w-[105px] h-[105px] flex items-center justify-center mb-2">
+          </div>
+          <!-- Action Buttons -->
+          <div class="flex items-center gap-1 w-full mt-auto">
+            <button onclick="selectPatientFromQR('${patient.id}')"
+              class="flex-1 py-1 px-1 rounded-xl font-heading font-bold text-[10px] transition ${isActive
+            ? 'bg-teal-500 text-white shadow-xs'
+            : 'bg-slate-100 hover:bg-teal-100 text-slate-700 hover:text-teal-900'
+          }">
+              ${isActive ? '✓ Seçili' : 'Aç'}
+            </button>
+            <button onclick="printPatientQRBadge('${patient.id}')" title="Bu Kartı Yazdır"
+              class="p-1 px-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-[10px] transition">
+              <i class="fa-solid fa-print"></i>
+            </button>
+            <button onclick="copyQRLinkForPatient('${patient.id}')" title="Linki Kopyala"
+              class="p-1 px-1.5 rounded-xl bg-slate-100 hover:bg-teal-100 text-slate-600 hover:text-teal-800 text-[10px] transition">
+              <i class="fa-solid fa-copy"></i>
+            </button>
+          </div>
+        `;
+
+        grid.appendChild(cardDiv);
+
+        // Generate mini QR for this card
+        setTimeout(() => {
+          const miniContainer = document.getElementById(`mini-qr-${idx}`);
+          if (miniContainer) {
+            generateQRCodeElement(miniContainer, patientUrl, 92);
+          }
+        }, 15);
+      });
+    }
+
+    function filterAllQRCards() {
+      const input = document.getElementById('all-qr-search-input');
+      const query = (input ? input.value : '').toLowerCase().trim();
+      if (!query) {
+        render5QRCards();
+        return;
+      }
+      const filtered = patients.filter(p =>
+        (p.name && p.name.toLowerCase().includes(query)) ||
+        (p.room && p.room.toLowerCase().includes(query)) ||
+        (p.id && p.id.toLowerCase().includes(query))
+      );
+      render5QRCards(filtered);
+    }
+
+    // --- YENİ EKLENEN HASTA İÇİN ÖZEL QR KUTLAMA EKRANI İŞLEMLERİ ---
+    function openNewPatientSuccessModal(patient) {
+      if (!patient) return;
+      newlyCreatedPatientForQR = patient;
+
+      const modal = document.getElementById('new-patient-qr-success-modal');
+      const avatarEl = document.getElementById('new-patient-modal-avatar');
+      const nameEl = document.getElementById('new-patient-modal-name');
+      const mascotEl = document.getElementById('new-patient-modal-mascot-title');
+      const roomTag = document.getElementById('new-patient-modal-room-tag');
+      const idEl = document.getElementById('new-patient-modal-id');
+      const qrContainer = document.getElementById('new-patient-qr-container');
+
+      if (avatarEl) avatarEl.innerText = patient.avatar || '🦁';
+      if (nameEl) nameEl.innerText = patient.name;
+      if (mascotEl) mascotEl.innerText = `${patient.avatar} ${patient.avatarTitle || 'Cesur Kahraman'} • Süper Kahraman`;
+      if (roomTag) roomTag.innerText = `Oda ${patient.room}`;
+      if (idEl) idEl.innerText = `KOD: ${patient.id}`;
+
+      if (qrContainer) {
+        const url = getPatientQRUrl(patient.id);
+        generateQRCodeElement(qrContainer, url, 160);
+      }
+
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
+    }
+
+    function closeNewPatientSuccessModal() {
+      const modal = document.getElementById('new-patient-qr-success-modal');
+      if (modal) modal.classList.add('hidden');
+      if (newlyCreatedPatientForQR) {
+        showWelcomeToast(newlyCreatedPatientForQR);
+      }
+    }
+
+    function copyCreatedPatientLink() {
+      const patient = newlyCreatedPatientForQR || getActivePatient();
+      if (!patient) return;
+      const url = getPatientQRUrl(patient.id);
+      navigator.clipboard.writeText(url).then(() => {
+        const btnText = document.getElementById('new-patient-copy-btn-text');
+        if (btnText) {
+          btnText.innerText = 'Kopyalandı! ✓';
+          setTimeout(() => { btnText.innerText = 'Linki Kopyala'; }, 2000);
+        }
+      }).catch(err => {
+        prompt('QR Giriş Bağlantısı:', url);
+      });
+    }
+
+
+    function printCreatedPatientBadge() {
+      const patient = newlyCreatedPatientForQR || getActivePatient();
+      if (!patient) return;
+      printPatientQRBadge(patient.id);
+    }
+
+    function openPatientQRFromAdmin(patientId) {
+      const target = patients.find(p => p.id === patientId);
+      if (!target) return;
+      closeNurseAdminModal();
+      openNewPatientSuccessModal(target);
+    }
+
+    function switchQRTab(tabName) {
+      if (tabName !== 'single' && !isNurseLoggedIn) {
+        openNurseLoginModal('five');
+        return;
+      }
+
+      const tabSingle = document.getElementById('qr-tab-single');
+      const tabFive = document.getElementById('qr-tab-five');
+      const tabSettings = document.getElementById('qr-tab-settings');
+
+      const btnSingle = document.getElementById('qr-tab-btn-single');
+      const btnFive = document.getElementById('qr-tab-btn-five');
+      const btnSettings = document.getElementById('qr-tab-btn-settings');
+
+      if (!tabSingle || !tabFive || !tabSettings) return;
+
+      tabSingle.classList.add('hidden');
+      tabFive.classList.add('hidden');
+      tabSettings.classList.add('hidden');
+
+      const inactiveBtnClass = 'flex-1 py-1.5 px-2 rounded-xl font-heading font-bold text-xs text-teal-800 hover:bg-white/60 transition flex items-center justify-center gap-1';
+      const activeBtnClass = 'flex-1 py-1.5 px-2 rounded-xl font-heading font-black text-xs transition bg-white text-teal-900 shadow-sm border border-teal-200 flex items-center justify-center gap-1';
+
+      if (btnSingle) btnSingle.className = inactiveBtnClass;
+      if (btnFive) btnFive.className = inactiveBtnClass;
+      if (btnSettings) btnSettings.className = 'py-1.5 px-2.5 rounded-xl font-heading font-bold text-xs text-teal-800 hover:bg-white/60 transition flex items-center justify-center gap-1';
+
+      if (tabName === 'single') {
+        tabSingle.classList.remove('hidden');
+        if (btnSingle) btnSingle.className = activeBtnClass;
+        renderActiveQRCode();
+      } else if (tabName === 'five') {
+        tabFive.classList.remove('hidden');
+        if (btnFive) btnFive.className = activeBtnClass;
+        render5QRCards();
+      } else if (tabName === 'settings') {
+        tabSettings.classList.remove('hidden');
+        if (btnSettings) btnSettings.className = 'py-1.5 px-2.5 rounded-xl font-heading font-black text-xs transition bg-white text-teal-900 shadow-sm border border-teal-200 flex items-center justify-center gap-1';
+        updateQRSettingsPreview();
+      }
+    }
+
+    function selectPatientFromQR(patientId) {
+      activePatientId = patientId;
+      localStorage.setItem(ACTIVE_ID_KEY, activePatientId);
+      renderActivePatient();
+      switchQRTab('single');
+      showWelcomeToast(getActivePatient());
+    }
+
+    function copyActiveQRLink() {
+      const active = getActivePatient();
+      if (!active) return;
+      const url = getPatientQRUrl(active.id);
+      navigator.clipboard.writeText(url).then(() => {
+        const copyTextEl = document.getElementById('copy-link-text');
+        if (copyTextEl) {
+          copyTextEl.innerText = 'Kopyalandı! ✓';
+          setTimeout(() => {
+            copyTextEl.innerText = 'Bağlantıyı Kopyala';
+          }, 2000);
+        }
+      }).catch(err => {
+        prompt('QR Kod Bağlantısı:', url);
+      });
+    }
+
+    function copyQRLinkForPatient(patientId) {
+      const url = getPatientQRUrl(patientId);
+      navigator.clipboard.writeText(url).then(() => {
+        alert('📋 QR Giriş Bağlantısı Kopyalandı:\n\n' + url);
+      }).catch(err => {
+        prompt('QR Kod Bağlantısı:', url);
+      });
+    }
+
+    function openActiveQRLink() {
+      const active = getActivePatient();
+      if (!active) return;
+      const url = getPatientQRUrl(active.id);
+      window.open(url, '_blank');
+    }
+
+    function updateQRSettingsPreview() {
+      const previewEl = document.getElementById('current-url-preview');
+      const inputEl = document.getElementById('custom-qr-host-input');
+      const savedHost = localStorage.getItem('cbu_custom_qr_host') || '';
+
+      if (previewEl) {
+        previewEl.innerText = window.location.origin + window.location.pathname;
+      }
+      if (inputEl) {
+        inputEl.value = savedHost;
+      }
+    }
+
+    function saveCustomQRHost() {
+      const inputEl = document.getElementById('custom-qr-host-input');
+      if (!inputEl) return;
+      const val = inputEl.value.trim();
+      if (val) {
+        localStorage.setItem('cbu_custom_qr_host', val);
+        alert('✅ Özel QR web adresi kaydedildi!\n\nArtık tüm QR kodlar bu adresi açacaktır:\n' + val);
+      } else {
+        localStorage.removeItem('cbu_custom_qr_host');
+        alert('🔄 Otomatik adres kullanımına dönüldü.');
+      }
+      renderActiveQRCode();
+      render5QRCards();
+    }
+
+    function resetCustomQRHost() {
+      localStorage.removeItem('cbu_custom_qr_host');
+      const inputEl = document.getElementById('custom-qr-host-input');
+      if (inputEl) inputEl.value = '';
+      alert('🔄 QR bağlantı adresi varsayılana sıfırlandı.');
+      renderActiveQRCode();
+      render5QRCards();
+    }
+
+    function showWelcomeToast(patient) {
+      if (!patient) return;
+      const toast = document.getElementById('welcome-toast');
+      const avatarEl = document.getElementById('welcome-toast-avatar');
+      const titleEl = document.getElementById('welcome-toast-title');
+      const descEl = document.getElementById('welcome-toast-desc');
+      const idEl = document.getElementById('welcome-toast-id');
+
+      if (!toast) return;
+
+      if (avatarEl) avatarEl.innerText = patient.avatar || '🐰';
+      if (titleEl) titleEl.innerText = `Hoş Geldin ${patient.name}! 🎉`;
+      if (descEl) descEl.innerText = `${patient.avatarTitle || 'Cesur Kahraman'} profilinle hastane maceran başladı!`;
+      if (idEl) idEl.innerText = patient.id;
+
+      toast.classList.remove('-translate-y-32', 'opacity-0', 'pointer-events-none');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.add('-translate-y-32', 'opacity-0', 'pointer-events-none');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 4000);
+    }
+
+    function printSingleQRCard() {
+      const active = getActivePatient();
+      if (!active) return;
+      printPatientQRBadge(active.id);
+    }
+
+    function printPatientQRBadge(patientId) {
+      const p = patients.find(x => x.id === patientId) || getActivePatient();
+      if (!p) return;
+      const printContainer = document.getElementById('printable-cards-container');
+      if (!printContainer) return;
+
+      const url = getPatientQRUrl(p.id);
+      printContainer.innerHTML = `
+        <div style="max-width: 380px; margin: 20px auto; border: 3px solid #0f766e; border-radius: 24px; padding: 24px; text-align: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0fdf4; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
+            <span style="font-size: 24px;">🏥</span>
+            <h2 style="color: #0f766e; margin: 0; font-size: 16px; font-weight: bold;">Manisa Celal Bayar Üniversitesi</h2>
+          </div>
+          <p style="margin: 0 0 12px 0; font-size: 13px; color: #115e59; font-weight: 600;">Çocuk Sağlığı ve Hastalıkları Anabilim Dalı</p>
+          
+          <div style="background: linear-gradient(135deg, #fef3c7, #ccfbf1); border: 2px solid #f59e0b; border-radius: 18px; padding: 12px; margin-bottom: 12px;">
+            <h3 style="color: #b45309; margin: 0 0 4px 0; font-size: 15px;">🛡️ Kahraman Hasta Kimlik Kartı ✨</h3>
+            <div style="font-size: 55px; margin: 4px 0;">${p.avatar}</div>
+            <h1 style="margin: 4px 0; color: #134e4a; font-size: 22px; font-weight: 800;">${p.name}</h1>
+            <p style="margin: 2px 0; font-size: 14px; font-weight: bold; color: #d97706;">🚪 Gizli Üs (Oda): ${p.room}</p>
+          </div>
+
+          <div id="print-single-badge-qr" style="display: inline-block; padding: 10px; background: white; border-radius: 14px; border: 2px solid #0d9488; margin-bottom: 10px;"></div>
+          
+          <p style="font-size: 12px; color: #0f766e; margin: 0; font-weight: bold;">📱 Telefon kamerasından bu QR kodu okutarak şifresiz maceraya katıl!</p>
+        </div>
+      `;
+
+      generateQRCodeElement(document.getElementById('print-single-badge-qr'), url, 180);
+      setTimeout(() => {
+        window.print();
+      }, 350);
+    }
+
+    function printAllPatientQRCards() {
+      const printContainer = document.getElementById('printable-cards-container');
+      if (!printContainer || patients.length === 0) return;
+
+      let cardsHtml = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 10px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #0f766e; margin: 0; font-size: 20px;">🏥 Manisa Celal Bayar Üniversitesi Çocuk Servisi</h1>
+            <h3 style="color: #d97706; margin: 5px 0; font-size: 16px;">🌟 Tüm Kayıtlı Kahraman Çocukların QR Kimlik Kartları (${patients.length} Hasta)</h3>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+      `;
+
+      patients.forEach((p, idx) => {
+        cardsHtml += `
+          <div style="border: 2px dashed #0d9488; border-radius: 16px; padding: 14px; text-align: center; background: #fafaf9; page-break-inside: avoid;">
+            <div style="font-size: 38px; margin-bottom: 2px;">${p.avatar}</div>
+            <h3 style="margin: 3px 0; color: #115e59; font-size: 16px;">${p.name}</h3>
+            <p style="margin: 2px 0; font-size: 13px; font-weight: bold; color: #c2410c;">🚪 Oda: ${p.room}</p>
+            <div id="print-qr-all-${idx}" style="display: inline-block; padding: 8px; background: white; border-radius: 10px; border: 1px solid #ccfbf1; margin: 8px 0;"></div>
+            <p style="font-size: 11px; color: #0f766e; margin: 0; font-weight: bold;">📱 Telefonla tara ve profili aç</p>
+          </div>
+        `;
+      });
+
+      cardsHtml += `</div></div>`;
+      printContainer.innerHTML = cardsHtml;
+
+      patients.forEach((p, idx) => {
+        const url = getPatientQRUrl(p.id);
+        setTimeout(() => {
+          generateQRCodeElement(document.getElementById(`print-qr-all-${idx}`), url, 125);
+        }, 15);
+      });
+
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    }
+
+    function printAll5QRCards() {
+      printAllPatientQRCards();
     }
 
     // --- YOUTUBE IFRAME API & %95 OTOMATİK İZLEME TAKİBİ (İLERİ/GERİ SARMA ENGELLİ) ---

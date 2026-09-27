@@ -18,14 +18,16 @@ PORT = 8000
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 CSV_FILE = os.path.join(DIRECTORY, "kayit.csv")
 
-# Ensure kayit.csv exists with headers
-if not os.path.exists(CSV_FILE):
-    with open(CSV_FILE, mode="w", newline="", encoding="utf-8-sig") as f:
-        writer = csv.writer(f)
-        writer.writerow(["ID", "Ad Soyad", "Oda No", "Avatar", "Avatar Basligi", "Puan", "Tamamlanan Gorevler", "Kayit Tarihi"])
-        writer.writerow(["CBÜ-2026-101", "Efe Yılmaz", "204", "🦁", "Cesur Aslan", "25", "task-water;task-food", "26.09.2026"])
-        writer.writerow(["CBÜ-2026-102", "Zeynep Kaya", "108", "🦢", "Zarif Kuğu", "55", "task-water;task-food;task-hygiene;task-medicine", "26.09.2026"])
-        writer.writerow(["CBÜ-2026-103", "Ali Demir", "312", "🐯", "Güçlü Kaplan", "10", "task-hygiene", "26.09.2026"])
+def ensure_csv_file():
+    if not os.path.exists(CSV_FILE):
+        try:
+            with open(CSV_FILE, mode="w", newline="", encoding="utf-8-sig") as f:
+                writer = csv.writer(f)
+                writer.writerow(["ID", "Ad Soyad", "Oda No", "Avatar", "Avatar Basligi", "Puan", "Tamamlanan Gorevler", "Kayit Tarihi"])
+        except Exception as e:
+            print(f"CSV Olusturma Hatasi: {e}")
+
+ensure_csv_file()
 
 def read_patients_csv():
     patients = []
@@ -69,6 +71,7 @@ def read_patients_csv():
                 })
     except Exception as e:
         print(f"CSV Okuma Hatasi: {e}")
+        return []
     return patients
 
 def write_patients_csv(patients):
@@ -88,6 +91,7 @@ def write_patients_csv(patients):
                     tasks_str,
                     p.get("createdAt", "")
                 ])
+        print(f"📁 [CSV] {len(patients)} çocuk hasta kaydı '{os.path.basename(CSV_FILE)}' dosyasına kaydedildi.")
         return True
     except Exception as e:
         print(f"CSV Yazma Hatasi: {e}")
@@ -119,7 +123,11 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
             self.end_headers()
-            self.wfile.write(json.dumps({"status": "ok", "file": "kayit.csv", "count": len(read_patients_csv())}).encode('utf-8'))
+            self.wfile.write(json.dumps({
+                "status": "ok",
+                "file": "kayit.csv",
+                "count": len(read_patients_csv())
+            }).encode('utf-8'))
         elif self.path == '/' or self.path == '':
             self.path = '/Kid_inferance.html'
             super().do_GET()
@@ -150,13 +158,30 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
+def get_local_ip():
+    try:
+        import socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(0.1)
+        s.connect(('8.8.8.8', 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        try:
+            return socket.gethostbyname(socket.gethostname())
+        except Exception:
+            return "127.0.0.1"
+
 def run():
     socketserver.TCPServer.allow_reuse_address = True
+    local_ip = get_local_ip()
     with socketserver.TCPServer(("", PORT), CustomHandler) as httpd:
         print(f"==================================================")
         print(f"🏥 CBÜ Çocuk Servisi Portalı Başlatıldı!")
-        print(f"📁 Bilgiler 'kayit.csv' dosyasında anlık tutulmaktadır.")
-        print(f"🌐 Adres: http://localhost:{PORT}")
+        print(f"📁 Veri Dosyası: kayit.csv ({len(read_patients_csv())} Kayıtlı Hasta)")
+        print(f"💻 Bilgisayarınızdan: http://localhost:{PORT}")
+        print(f"📱 Telefondan Test İçin: http://{local_ip}:{PORT}")
         print(f"==================================================")
         
         url = f"http://localhost:{PORT}/Kid_inferance.html"

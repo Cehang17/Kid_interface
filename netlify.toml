@@ -1,0 +1,12 @@
+[build]
+  publish = "."
+
+[[redirects]]
+  from = "/"
+  to = "/Kid_inferance.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/Kid_inferance.html"
+  status = 200
